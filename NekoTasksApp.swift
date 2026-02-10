@@ -16,6 +16,7 @@ import UserNotifications
 
 @main
 struct NekoTasksApp: App {
+    @State private var calendarState = CalendarState()
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             TaskItem.self,
@@ -42,6 +43,7 @@ struct NekoTasksApp: App {
         WindowGroup {
             ContentView()
         }
+        .environment(calendarState)
         .modelContainer(sharedModelContainer)
     }
 }

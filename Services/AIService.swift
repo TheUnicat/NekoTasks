@@ -140,10 +140,10 @@ final class CreateTaskTool: Tool {
         @Guide(description: "Priority level: 1 = low, 2 = medium, 3 = high", .anyOf(["1", "2", "3"]))
         var priority: String?
 
-        @Guide(description: "Comma-separated label names to categorize the task, or nil if none")
+        @Guide(description: "Comma-separated label names to categorize the task")
         var labels: String?
 
-        @Guide(description: "JSON array of subtask objects, ordered by sequence. Each object: {\"title\":\"...\", \"description\":\"...\", \"deadline\":\"ISO8601\", \"timeEstimate\":\"HH:MM\", \"priority\":\"1-3\"}. Only title is required. Or nil if none.")
+        @Guide(description: "JSON array of subtask objects, ordered sequentially. Each object: {\"title\":\"...\", \"description\":\"...\", \"deadline\":\"ISO8601\", \"timeEstimate\":\"HH:MM\", \"priority\":\"1-3\"}. Only title is required.")
         var subtasks: String?
     }
 

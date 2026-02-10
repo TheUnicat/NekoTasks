@@ -6,23 +6,41 @@
 //
 //  CLAUDE NOTES:
 //  Events tab. Queries only events (typeRaw==1). Shows events for a selected date with recurrence evaluation.
-//  Main: CalendarView — date navigator + scrolling event list. Filters by recurring/one-time and labels.
-//  New events created outside modelContext, inserted only on save (good cancel pattern).
-//  Subviews: DateNavigator (prev/next/today/filter buttons), DatePickerSheet (graphical date picker),
-//  FilterSheet (toggles for event types + label selection), LabelToggleRow, EmptyDayView.
-//  EventFilter struct tracks filter state. eventOccursOn() evaluates recurrence rules via RecurrenceContext.
-//  Listens for .addNewItem notification to create events from external triggers.
+//  CalendarState (@Observable) holds shared UI state: selectedDate, filter, viewType, sheet toggles.
+//  CalendarView is the root — owns @Query, date filtering logic, and sheet presentation.
+//  Delegates to DayView or WeekView based on calendarPeriod toggle.
+//  DateNavigator handles day/week picker + date nav (chevrons, today/this week, filter).
+//  WeekView renders a time-grid with 7 DayColumns and a TimeGutter.
+//  EventWeekBlock is a compact event representation for the week grid.
 //
 
 import SwiftUI
 import SwiftData
+
+// MARK: - Calendar State
+
+enum CalendarPeriod: String, CaseIterable, Hashable {
+    case day = "Day"
+    case week = "Week"
+}
+
+@Observable
+class CalendarState {
+    var selectedDate: Date = Date()
+    var filter: EventFilter = .all
+    var showingFilterSheet = false
+    var showingDatePicker = false
+    var editingEvent: TaskItem?
+    var isCreatingNew = false
+    var viewType: CalendarPeriod = .day
+}
 
 // MARK: - Event Filter
 
 struct EventFilter: Equatable {
     var showRecurring: Bool = true
     var showOneTime: Bool = true
-    var labelIDs: Set<PersistentIdentifier> = []  // Empty = show all
+    var labelIDs: Set<PersistentIdentifier> = []
 
     var isDefault: Bool {
         showRecurring && showOneTime && labelIDs.isEmpty
@@ -31,102 +49,60 @@ struct EventFilter: Equatable {
     static let all = EventFilter()
 }
 
-// MARK: - Calendar View
+// MARK: - Calendar View (Root)
 
 struct CalendarView: View {
+    @Environment(CalendarState.self) var state
     @Environment(\.modelContext) private var modelContext
+
     @Query(filter: #Predicate<TaskItem> { $0.typeRaw == 1 })
     private var allEvents: [TaskItem]
 
-    @State private var selectedDate: Date = Date()
-    @State private var filter: EventFilter = .all
-    @State private var showingFilterSheet = false
-    @State private var showingDatePicker = false
-    @State private var editingEvent: TaskItem?
-    @State private var isCreatingNew = false
-
-    private var eventsForSelectedDate: [TaskItem] {
-        let context = RecurrenceContext(date: selectedDate)
-
-        return allEvents
-            .filter { event in
-                // Apply visibility filters
-                if event.recurrence && !filter.showRecurring { return false }
-                if !event.recurrence && !filter.showOneTime { return false }
-
-                // Apply label filter
-                if !filter.labelIDs.isEmpty {
-                    let eventLabelIDs = Set(event.labels.map { $0.persistentModelID })
-                    if eventLabelIDs.isDisjoint(with: filter.labelIDs) { return false }
-                }
-
-                // Check if event occurs on selected date
-                return eventOccursOn(event: event, context: context)
-            }
-            .sorted { a, b in
-                // All-day events first, then by start time
-                let aTime = a.startTime ?? Date.distantPast
-                let bTime = b.startTime ?? Date.distantPast
-                return aTime < bTime
-            }
-    }
+    private let calendar = Calendar.current
 
     var body: some View {
+        @Bindable var state = state
+
         VStack(spacing: 0) {
-            DateNavigator(
-                selectedDate: $selectedDate,
-                showingDatePicker: $showingDatePicker,
-                filter: $filter,
-                showingFilterSheet: $showingFilterSheet
-            )
-            .padding(.horizontal)
-            .padding(.vertical, 8)
+            DateNavigator()
+                .padding(.horizontal)
+                .padding(.vertical, 8)
 
             Divider()
 
-            ScrollView {
-                LazyVStack(spacing: 12) {
-                    if eventsForSelectedDate.isEmpty {
-                        EmptyDayView()
-                    } else {
-                        ForEach(eventsForSelectedDate) { event in
-                            EventCard(event: event) {
-                                isCreatingNew = false
-                                editingEvent = event
-                            }
-                        }
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
+            switch state.viewType {
+            case .day:
+                DayEventList(events: eventsForSelectedDate)
+            case .week:
+                WeekView(allEvents: allEvents)
             }
         }
-        .sheet(isPresented: $showingDatePicker) {
-            DatePickerSheet(selectedDate: $selectedDate)
+        .sheet(isPresented: $state.showingDatePicker) {
+            DatePickerSheet()
         }
-        .sheet(isPresented: $showingFilterSheet) {
-            FilterSheet(filter: $filter)
+        .sheet(isPresented: $state.showingFilterSheet) {
+            FilterSheet()
         }
-        .sheet(item: $editingEvent) { event in
+        .sheet(item: $state.editingEvent) { event in
             ShowTask(
                 task: event,
                 onCancel: {
-                    editingEvent = nil
-                    isCreatingNew = false
+                    state.editingEvent = nil
+                    state.isCreatingNew = false
                 },
                 onSave: {
-                    if isCreatingNew {
+                    if state.isCreatingNew {
                         let trimmed = event.title.trimmingCharacters(in: .whitespacesAndNewlines)
                         guard !trimmed.isEmpty else {
-                            editingEvent = nil
-                            isCreatingNew = false
+                            state.editingEvent = nil
+                            state.isCreatingNew = false
                             return
                         }
                         event.title = trimmed
                         modelContext.insert(event)
                     }
-                    editingEvent = nil
-                    isCreatingNew = false
+                    state.editingEvent = nil
+                    state.isCreatingNew = false
                 }
             )
         }
@@ -137,37 +113,16 @@ struct CalendarView: View {
         }
     }
 
-    private func addEvent() {
-        isCreatingNew = true
-        let newEvent = TaskItem(title: "", type: .event)
-        // Default to selected date at 9 AM
-        let calendar = Calendar.current
-        newEvent.startTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: selectedDate)
-        newEvent.endTime = calendar.date(bySettingHour: 10, minute: 0, second: 0, of: selectedDate)
-        editingEvent = newEvent
+    private var eventsForSelectedDate: [TaskItem] {
+        allEvents.eventsOn(date: state.selectedDate, filter: state.filter)
     }
 
-    private func eventOccursOn(event: TaskItem, context: RecurrenceContext) -> Bool {
-        let calendar = Calendar.current
-
-        if event.recurrence {
-            // Parse and evaluate recurrence rule
-            if let ruleString = event.recurrenceRuleString,
-               let rule = parseRule(from: ruleString) {
-                return rule.matches(context: context)
-            }
-            // No valid rule = doesn't match
-            return false
-        } else {
-            // One-time event: check if deadline or startTime is on selected date
-            if let startTime = event.startTime {
-                return calendar.isDate(startTime, inSameDayAs: context.date)
-            }
-            if let deadline = event.deadline {
-                return calendar.isDate(deadline, inSameDayAs: context.date)
-            }
-            return false
-        }
+    private func addEvent() {
+        state.isCreatingNew = true
+        let newEvent = TaskItem(title: "", type: .event)
+        newEvent.startTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: state.selectedDate)
+        newEvent.endTime = calendar.date(bySettingHour: 10, minute: 0, second: 0, of: state.selectedDate)
+        state.editingEvent = newEvent
     }
 
     private func parseRule(from jsonString: String) -> AnyRule? {
@@ -179,112 +134,482 @@ struct CalendarView: View {
 // MARK: - Date Navigator
 
 struct DateNavigator: View {
-    @Binding var selectedDate: Date
-    @Binding var showingDatePicker: Bool
-    @Binding var filter: EventFilter
-    @Binding var showingFilterSheet: Bool
+    @Environment(CalendarState.self) var state
 
     private let calendar = Calendar.current
 
     var body: some View {
-        HStack(spacing: 16) {
-            // Previous day
-            Button {
-                moveDate(by: -1)
-            } label: {
-                Image(systemName: "chevron.left")
-                    .font(.title3.weight(.semibold))
-            }
-            .buttonStyle(.plain)
+        @Bindable var state = state
 
-            // Date display (tappable)
-            Button {
-                showingDatePicker = true
-            } label: {
-                VStack(spacing: 2) {
-                    Text(formattedDate)
-                        .font(.headline)
-                    Text(relativeDate)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+        VStack(spacing: 8) {
+            // Day/Week segmented picker
+            Picker("", selection: $state.viewType) {
+                ForEach(CalendarPeriod.allCases, id: \.self) { period in
+                    Text(period.rawValue).tag(period)
                 }
             }
-            .buttonStyle(.plain)
+            .pickerStyle(.segmented)
 
-            // Next day
-            Button {
-                moveDate(by: 1)
-            } label: {
-                Image(systemName: "chevron.right")
-                    .font(.title3.weight(.semibold))
-            }
-            .buttonStyle(.plain)
-
-            Spacer()
-
-            // Today button
-            if !calendar.isDateInToday(selectedDate) {
-                Button("Today") {
-                    withAnimation {
-                        selectedDate = Date()
+            // Date navigation row
+            ZStack {
+                // Centered: chevrons + date
+                HStack(spacing: 20) {
+                    Button {
+                        moveDate(by: state.viewType == .day ? -1 : -7)
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.title3.weight(.semibold))
+                            .frame(width: 20, height: 20)
                     }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        state.showingDatePicker = true
+                    } label: {
+                        VStack(spacing: 2) {
+                            Text(dateTitle)
+                                .font(.headline)
+                            Text(dateSubtitle)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(width: 180)
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        moveDate(by: state.viewType == .day ? 1 : 7)
+                    } label: {
+                        Image(systemName: "chevron.right")
+                            .font(.title3.weight(.semibold))
+                            .frame(width: 20, height: 20)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .font(.subheadline)
-                .buttonStyle(.bordered)
-            }
 
-            // Filter button
-            Button {
-                showingFilterSheet = true
-            } label: {
-                Image(systemName: filter.isDefault ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
-                    .font(.title3)
-                    .foregroundStyle(filter.isDefault ? .secondary : Color.blue)
+                // Right-aligned: today/this week + filter
+                HStack {
+                    Spacer()
+
+                    if !isCurrentPeriod {
+                        Button(state.viewType == .day ? "Today" : "This Week") {
+                            withAnimation {
+                                state.selectedDate = Date()
+                            }
+                        }
+                        .font(.subheadline)
+                        .buttonStyle(.bordered)
+                    }
+
+                    Button {
+                        state.showingFilterSheet = true
+                    } label: {
+                        Image(systemName: state.filter.isDefault
+                              ? "line.3.horizontal.decrease.circle"
+                              : "line.3.horizontal.decrease.circle.fill")
+                            .font(.title3)
+                            .foregroundStyle(state.filter.isDefault ? .secondary : Color.blue)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
-            .buttonStyle(.plain)
         }
     }
 
-    private var formattedDate: String {
+    // MARK: - Date Display
+
+    private var dateTitle: String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "EEEE, MMM d"
-        return formatter.string(from: selectedDate)
+        switch state.viewType {
+        case .day:
+            formatter.dateFormat = "EEEE, MMM d"
+            return formatter.string(from: state.selectedDate)
+        case .week:
+            let (start, end) = weekBounds
+            formatter.dateFormat = "MMM d"
+            let startStr = formatter.string(from: start)
+            // If week spans two months, show both; otherwise just show end day
+            if calendar.component(.month, from: start) == calendar.component(.month, from: end) {
+                let dayFormatter = DateFormatter()
+                dayFormatter.dateFormat = "d"
+                return "\(startStr) – \(dayFormatter.string(from: end))"
+            } else {
+                return "\(startStr) – \(formatter.string(from: end))"
+            }
+        }
     }
 
-    private var relativeDate: String {
-        if calendar.isDateInToday(selectedDate) {
-            return "Today"
-        } else if calendar.isDateInYesterday(selectedDate) {
-            return "Yesterday"
-        } else if calendar.isDateInTomorrow(selectedDate) {
-            return "Tomorrow"
-        } else {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy"
-            return formatter.string(from: selectedDate)
+    private var dateSubtitle: String {
+        switch state.viewType {
+        case .day:
+            if calendar.isDateInToday(state.selectedDate) {
+                return "Today"
+            } else if calendar.isDateInYesterday(state.selectedDate) {
+                return "Yesterday"
+            } else if calendar.isDateInTomorrow(state.selectedDate) {
+                return "Tomorrow"
+            } else {
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy"
+                return formatter.string(from: state.selectedDate)
+            }
+        case .week:
+            let (start, _) = weekBounds
+            if calendar.isDate(start, equalTo: Date(), toGranularity: .weekOfYear) {
+                return "This Week"
+            } else {
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy"
+                return formatter.string(from: state.selectedDate)
+            }
         }
+    }
+
+    private var isCurrentPeriod: Bool {
+        switch state.viewType {
+        case .day:
+            return calendar.isDateInToday(state.selectedDate)
+        case .week:
+            let (start, _) = weekBounds
+            return calendar.isDate(start, equalTo: Date(), toGranularity: .weekOfYear)
+        }
+    }
+
+    private var weekBounds: (start: Date, end: Date) {
+        var start = state.selectedDate
+        var interval: TimeInterval = 0
+        _ = calendar.dateInterval(of: .weekOfYear, start: &start, interval: &interval, for: state.selectedDate)
+        let end = calendar.date(byAdding: .day, value: 6, to: start)!
+        return (start, end)
     }
 
     private func moveDate(by days: Int) {
         withAnimation(.easeInOut(duration: 0.15)) {
-            if let newDate = calendar.date(byAdding: .day, value: days, to: selectedDate) {
-                selectedDate = newDate
+            if let newDate = calendar.date(byAdding: .day, value: days, to: state.selectedDate) {
+                state.selectedDate = newDate
             }
         }
+    }
+}
+
+// MARK: - Day Event List
+
+struct DayEventList: View {
+    let events: [TaskItem]
+    @Environment(CalendarState.self) var state
+
+    var body: some View {
+        ScrollView {
+            LazyVStack(spacing: 12) {
+                if events.isEmpty {
+                    EmptyDayView()
+                } else {
+                    ForEach(events) { event in
+                        EventCard(event: event) {
+                            state.isCreatingNew = false
+                            state.editingEvent = event
+                        }
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+        }
+    }
+}
+
+// MARK: - Week View
+
+struct WeekView: View {
+    let allEvents: [TaskItem]
+    @Environment(CalendarState.self) var state
+
+    private let calendar = Calendar.current
+    private let hourHeight: CGFloat = 60
+    private let gutterWidth: CGFloat = 50
+    private let startHour = 0
+    private let endHour = 24
+
+    private var weekDates: [Date] {
+        var start = state.selectedDate
+        var interval: TimeInterval = 0
+        _ = calendar.dateInterval(of: .weekOfYear, start: &start, interval: &interval, for: state.selectedDate)
+        return (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: start) }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Week header row
+            WeekHeaderRow(dates: weekDates)
+                .padding(.leading, gutterWidth)
+
+            Divider()
+
+            // Time grid
+            ScrollView(.vertical) {
+                ScrollViewReader { proxy in
+                    HStack(alignment: .top, spacing: 0) {
+                        TimeGutter(startHour: startHour, endHour: endHour, hourHeight: hourHeight)
+                            .frame(width: gutterWidth)
+
+                        ForEach(weekDates, id: \.self) { date in
+                            DayColumn(
+                                date: date,
+                                allEvents: allEvents,
+                                hourHeight: hourHeight,
+                                startHour: startHour,
+                                endHour: endHour
+                            )
+                        }
+                    }
+                    .onAppear {
+                        // Scroll to ~8 AM on appear
+                        proxy.scrollTo("hour-8", anchor: .top)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Week Header Row
+
+struct WeekHeaderRow: View {
+    let dates: [Date]
+    private let calendar = Calendar.current
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(dates, id: \.self) { date in
+                VStack(spacing: 2) {
+                    Text(dayOfWeekShort(date))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    Text("\(calendar.component(.day, from: date))")
+                        .font(.subheadline.weight(calendar.isDateInToday(date) ? .bold : .regular))
+                        .foregroundStyle(calendar.isDateInToday(date) ? .white : .primary)
+                        .frame(width: 28, height: 28)
+                        .background {
+                            if calendar.isDateInToday(date) {
+                                Circle().fill(Color.blue)
+                            }
+                        }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 4)
+            }
+        }
+    }
+
+    private func dayOfWeekShort(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE"
+        return formatter.string(from: date).uppercased()
+    }
+}
+
+// MARK: - Time Gutter
+
+struct TimeGutter: View {
+    let startHour: Int
+    let endHour: Int
+    let hourHeight: CGFloat
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ForEach(startHour..<endHour, id: \.self) { hour in
+                Text(hourLabel(hour))
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .frame(height: hourHeight, alignment: .top)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.trailing, 4)
+                    .offset(y: -6) // Align text with grid line
+                    .id("hour-\(hour)")
+            }
+        }
+    }
+
+    private func hourLabel(_ hour: Int) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h a"
+        let date = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date())!
+        return formatter.string(from: date)
+    }
+}
+
+// MARK: - Day Column (Week Grid)
+
+struct DayColumn: View {
+    let date: Date
+    let allEvents: [TaskItem]
+    let hourHeight: CGFloat
+    let startHour: Int
+    let endHour: Int
+
+    @Environment(CalendarState.self) var state
+
+    private let calendar = Calendar.current
+
+    private var dayEvents: [TaskItem] {
+        // Reuse the parent's filtering logic would be ideal, but for now
+        // we filter events that have a startTime on this date
+        allEvents.filter { event in
+            // Apply visibility filters
+            if event.recurrence && !state.filter.showRecurring { return false }
+            if !event.recurrence && !state.filter.showOneTime { return false }
+
+            if !state.filter.labelIDs.isEmpty {
+                let eventLabelIDs = Set(event.labels.map { $0.persistentModelID })
+                if eventLabelIDs.isDisjoint(with: state.filter.labelIDs) { return false }
+            }
+
+            // Check occurrence
+            if event.recurrence {
+                if let ruleString = event.recurrenceRuleString,
+                   let data = ruleString.data(using: .utf8),
+                   let rule = try? JSONDecoder().decode(AnyRule.self, from: data) {
+                    return rule.matches(context: RecurrenceContext(date: date))
+                }
+                return false
+            } else {
+                if let startTime = event.startTime {
+                    return calendar.isDate(startTime, inSameDayAs: date)
+                }
+                if let deadline = event.deadline {
+                    return calendar.isDate(deadline, inSameDayAs: date)
+                }
+                return false
+            }
+        }
+    }
+
+    private var totalHeight: CGFloat {
+        CGFloat(endHour - startHour) * hourHeight
+    }
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            // Hour grid lines
+            VStack(spacing: 0) {
+                ForEach(startHour..<endHour, id: \.self) { _ in
+                    Rectangle()
+                        .fill(Color.clear)
+                        .frame(height: hourHeight)
+                        .overlay(alignment: .top) {
+                            Divider()
+                        }
+                }
+            }
+
+            // Current time indicator
+            if calendar.isDateInToday(date) {
+                CurrentTimeIndicator(hourHeight: hourHeight, startHour: startHour)
+            }
+
+            // Events
+            ForEach(dayEvents) { event in
+                EventWeekBlock(event: event)
+                    .frame(height: eventHeight(event))
+                    .offset(y: eventYOffset(event))
+                    .padding(.horizontal, 1)
+                    .onTapGesture {
+                        state.isCreatingNew = false
+                        state.editingEvent = event
+                    }
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: totalHeight)
+    }
+
+    private func eventYOffset(_ event: TaskItem) -> CGFloat {
+        guard let startTime = event.startTime else { return 0 }
+        let components = calendar.dateComponents([.hour, .minute], from: startTime)
+        let minutesSinceStart = CGFloat((components.hour ?? 0) - startHour) * 60 + CGFloat(components.minute ?? 0)
+        let totalMinutes = CGFloat(endHour - startHour) * 60
+        return (minutesSinceStart / totalMinutes) * totalHeight
+    }
+
+    private func eventHeight(_ event: TaskItem) -> CGFloat {
+        guard let startTime = event.startTime, let endTime = event.endTime else {
+            return hourHeight / 2 // Default: 30 min block
+        }
+        let duration = endTime.timeIntervalSince(startTime) / 60 // minutes
+        let totalMinutes = CGFloat(endHour - startHour) * 60
+        return max(CGFloat(duration) / totalMinutes * totalHeight, 20) // Min height 20
+    }
+}
+
+// MARK: - Current Time Indicator
+
+struct CurrentTimeIndicator: View {
+    let hourHeight: CGFloat
+    let startHour: Int
+
+    private var yOffset: CGFloat {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.hour, .minute], from: Date())
+        let minutesSinceStart = CGFloat((components.hour ?? 0) - startHour) * 60 + CGFloat(components.minute ?? 0)
+        let totalMinutes = CGFloat(24 - startHour) * 60
+        let totalHeight = CGFloat(24 - startHour) * hourHeight
+        return (minutesSinceStart / totalMinutes) * totalHeight
+    }
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Circle()
+                .fill(Color.red)
+                .frame(width: 8, height: 8)
+            Rectangle()
+                .fill(Color.red)
+                .frame(height: 1)
+        }
+        .offset(y: yOffset - 4) // Center the circle on the line
+    }
+}
+
+// MARK: - Event Week Block (Compact)
+
+struct EventWeekBlock: View {
+    let event: TaskItem
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(event.title)
+                .font(.system(size: 10, weight: .medium))
+                .lineLimit(2)
+                .foregroundStyle(.white)
+        }
+        .padding(2)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(eventColor.cornerRadius(3))
+    }
+
+    private var eventColor: Color {
+        // Use first label color if available, otherwise default
+        if let firstLabel = event.labels.first,
+           let hex = firstLabel.colorHex,
+           let color = Color(hex: hex) {
+            return color
+        }
+        return .blue
     }
 }
 
 // MARK: - Date Picker Sheet
 
 struct DatePickerSheet: View {
-    @Binding var selectedDate: Date
+    @Environment(CalendarState.self) var state
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
+        @Bindable var state = state
+
         NavigationStack {
             DatePicker(
                 "Select Date",
-                selection: $selectedDate,
+                selection: $state.selectedDate,
                 displayedComponents: .date
             )
             .datePickerStyle(.graphical)
@@ -292,9 +617,7 @@ struct DatePickerSheet: View {
             .navigationTitle("Go to Date")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
+                    Button("Done") { dismiss() }
                 }
             }
         }
@@ -305,16 +628,18 @@ struct DatePickerSheet: View {
 // MARK: - Filter Sheet
 
 struct FilterSheet: View {
-    @Binding var filter: EventFilter
+    @Environment(CalendarState.self) var state
     @Query private var allLabels: [TaskLabel]
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
+        @Bindable var state = state
+
         NavigationStack {
             Form {
                 Section("Event Types") {
-                    Toggle("Recurring events", isOn: $filter.showRecurring)
-                    Toggle("One-time events", isOn: $filter.showOneTime)
+                    Toggle("Recurring events", isOn: $state.filter.showRecurring)
+                    Toggle("One-time events", isOn: $state.filter.showOneTime)
                 }
 
                 if !allLabels.isEmpty {
@@ -322,28 +647,28 @@ struct FilterSheet: View {
                         ForEach(allLabels) { label in
                             LabelToggleRow(
                                 label: label,
-                                isSelected: filter.labelIDs.contains(label.persistentModelID)
+                                isSelected: state.filter.labelIDs.contains(label.persistentModelID)
                             ) { selected in
                                 if selected {
-                                    filter.labelIDs.insert(label.persistentModelID)
+                                    state.filter.labelIDs.insert(label.persistentModelID)
                                 } else {
-                                    filter.labelIDs.remove(label.persistentModelID)
+                                    state.filter.labelIDs.remove(label.persistentModelID)
                                 }
                             }
                         }
 
-                        if !filter.labelIDs.isEmpty {
+                        if !state.filter.labelIDs.isEmpty {
                             Button("Clear label filter") {
-                                filter.labelIDs.removeAll()
+                                state.filter.labelIDs.removeAll()
                             }
                         }
                     }
                 }
 
-                if !filter.isDefault {
+                if !state.filter.isDefault {
                     Section {
                         Button("Reset all filters") {
-                            filter = .all
+                            state.filter = .all
                         }
                     }
                 }
@@ -351,15 +676,15 @@ struct FilterSheet: View {
             .navigationTitle("Filter Events")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
+                    Button("Done") { dismiss() }
                 }
             }
         }
         .presentationDetents([.medium, .large])
     }
 }
+
+// MARK: - Label Toggle Row
 
 private struct LabelToggleRow: View {
     let label: TaskLabel
@@ -418,5 +743,6 @@ struct EmptyDayView: View {
 
 #Preview {
     CalendarView()
+        .environment(CalendarState())
         .modelContainer(for: [TaskItem.self, TaskLabel.self], inMemory: true)
 }

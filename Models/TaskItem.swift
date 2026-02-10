@@ -69,6 +69,44 @@ final class TaskItem {
     }
 }
 
+// MARK: - various extensions, like for filtering tasks or events on a certain day
+
+extension Array where Element == TaskItem {
+    func eventsOn(date: Date, filter: EventFilter) -> [TaskItem] {
+        let context = RecurrenceContext(date: date)
+        let calendar = Calendar.current
+
+        return self
+            .filter { event in
+                if event.recurrence && !filter.showRecurring { return false }
+                if !event.recurrence && !filter.showOneTime { return false }
+
+                if !filter.labelIDs.isEmpty {
+                    let ids = Set(event.labels.map { $0.persistentModelID })
+                    if ids.isDisjoint(with: filter.labelIDs) { return false }
+                }
+
+                return event.occursOn(date: date, calendar: calendar)
+            }
+            .sorted { ($0.startTime ?? .distantPast) < ($1.startTime ?? .distantPast) }
+    }
+}
+
+extension TaskItem {
+    func occursOn(date: Date, calendar: Calendar = .current) -> Bool {
+        if recurrence {
+            guard let ruleString = recurrenceRuleString,
+                  let data = ruleString.data(using: .utf8),
+                  let rule = try? JSONDecoder().decode(AnyRule.self, from: data) else { return false }
+            return rule.matches(context: RecurrenceContext(date: date))
+        } else {
+            if let s = startTime { return calendar.isDate(s, inSameDayAs: date) }
+            if let d = deadline { return calendar.isDate(d, inSameDayAs: date) }
+            return false
+        }
+    }
+}
+
 // MARK: - Item Type
 
 enum ItemType: Int, Codable {
