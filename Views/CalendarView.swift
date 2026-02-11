@@ -451,39 +451,6 @@ struct DayColumn: View {
 
     private let calendar = Calendar.current
 
-    private var dayEvents: [TaskItem] {
-        // Reuse the parent's filtering logic would be ideal, but for now
-        // we filter events that have a startTime on this date
-        allEvents.filter { event in
-            // Apply visibility filters
-            if event.recurrence && !state.filter.showRecurring { return false }
-            if !event.recurrence && !state.filter.showOneTime { return false }
-
-            if !state.filter.labelIDs.isEmpty {
-                let eventLabelIDs = Set(event.labels.map { $0.persistentModelID })
-                if eventLabelIDs.isDisjoint(with: state.filter.labelIDs) { return false }
-            }
-
-            // Check occurrence
-            if event.recurrence {
-                if let ruleString = event.recurrenceRuleString,
-                   let data = ruleString.data(using: .utf8),
-                   let rule = try? JSONDecoder().decode(AnyRule.self, from: data) {
-                    return rule.matches(context: RecurrenceContext(date: date))
-                }
-                return false
-            } else {
-                if let startTime = event.startTime {
-                    return calendar.isDate(startTime, inSameDayAs: date)
-                }
-                if let deadline = event.deadline {
-                    return calendar.isDate(deadline, inSameDayAs: date)
-                }
-                return false
-            }
-        }
-    }
-
     private var totalHeight: CGFloat {
         CGFloat(endHour - startHour) * hourHeight
     }
@@ -508,7 +475,7 @@ struct DayColumn: View {
             }
 
             // Events
-            ForEach(dayEvents) { event in
+            ForEach(allEvents.eventsOn(date: date, filter: state.filter)) { event in
                 EventWeekBlock(event: event)
                     .frame(height: eventHeight(event))
                     .offset(y: eventYOffset(event))
