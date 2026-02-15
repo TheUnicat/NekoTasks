@@ -1,5 +1,3 @@
-// MARK: - Tasks View
-
 import SwiftUI
 import SwiftData
 
@@ -31,6 +29,7 @@ struct TasksView: View {
                             if task.isCompleted {
                                 scheduleHide(task)
                             } else {
+                                // User uncompleted — cancel the pending hide
                                 completionTokens.removeValue(forKey: task.persistentModelID)
                                 recentlyCompleted.remove(task.persistentModelID)
                             }
@@ -47,43 +46,16 @@ struct TasksView: View {
             .navigationTitle("Tasks")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button(action: addItem) {
+                    Button {
+                        isCreatingNew = true
+                        editingTask = TaskItem(title: "")
+                    } label: {
                         Label("Add Task", systemImage: "plus")
                     }
                 }
             }
         }
-        .sheet(item: $editingTask, onDismiss: {
-            isCreatingNew = false
-        }) { task in
-            ShowTask(
-                task: task,
-                onCancel: {
-                    editingTask = nil
-                    isCreatingNew = false
-                },
-                onSave: {
-                    if isCreatingNew {
-                        let trimmed = task.title.trimmingCharacters(in: .whitespacesAndNewlines)
-                        guard !trimmed.isEmpty else {
-                            editingTask = nil
-                            isCreatingNew = false
-                            return
-                        }
-                        task.title = trimmed
-                        modelContext.insert(task)
-                    }
-                    editingTask = nil
-                    isCreatingNew = false
-                }
-            )
-        }
-    }
-
-    private func addItem() {
-        isCreatingNew = true
-        let newTask = TaskItem(title: "")
-        editingTask = newTask
+        .taskEditor(editingTask: $editingTask, isCreatingNew: $isCreatingNew)
     }
 
     private func scheduleHide(_ task: TaskItem) {

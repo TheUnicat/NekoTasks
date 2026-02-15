@@ -74,7 +74,6 @@ final class TaskItem {
 
 extension Array where Element == TaskItem {
     func eventsOn(date: Date, filter: EventFilter) -> [TaskItem] {
-        let context = RecurrenceContext(date: date)
         let calendar = Calendar.current
 
         return self

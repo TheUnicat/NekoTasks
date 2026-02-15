@@ -478,6 +478,19 @@ extension Color {
 
         self.init(red: r, green: g, blue: b)
     }
+
+    func toHex() -> String {
+        #if canImport(UIKit)
+        let uiColor = UIColor(self)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        uiColor.getRed(&r, green: &g, blue: &b, alpha: &a)
+        #elseif canImport(AppKit)
+        let nsColor = NSColor(self).usingColorSpace(.sRGB) ?? NSColor(self)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        nsColor.getRed(&r, green: &g, blue: &b, alpha: &a)
+        #endif
+        return String(format: "%02X%02X%02X", Int(r * 255), Int(g * 255), Int(b * 255))
+    }
 }
 
 // MARK: - Preview

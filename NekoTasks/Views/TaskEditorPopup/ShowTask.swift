@@ -100,6 +100,8 @@ struct ShowTask: View {
     @State private var isRecurring: Bool
     @State private var rule: AnyRule?
     @State private var subtaskDrafts: [SubtaskDraft] = []
+    @State private var selectedLabelIDs: Set<PersistentIdentifier> = []
+    @Query private var allLabels: [TaskLabel]
 
     init(
         task: TaskItem,
@@ -139,6 +141,7 @@ struct ShowTask: View {
             )
         }
         _subtaskDrafts = State(initialValue: drafts)
+        _selectedLabelIDs = State(initialValue: Set(task.labels.map { $0.persistentModelID }))
     }
 
     // Platform-appropriate text field
@@ -260,6 +263,10 @@ struct ShowTask: View {
                 Section {
                     inputField("Priority", text: $importance, placeholder: "1-5")
                     inputField("Location", text: $location)
+                }
+
+                Section("Labels") {
+                    LabelFlowPicker(selectedLabelIDs: $selectedLabelIDs)
                 }
 
                 Section {
@@ -432,6 +439,8 @@ struct ShowTask: View {
             print("Rule: \(rule?.toJSON() ?? "nil")")
             task.recurrenceRule = isRecurring ? rule : nil
         }
+
+        task.labels = allLabels.filter { selectedLabelIDs.contains($0.persistentModelID) }
     }
 }
 

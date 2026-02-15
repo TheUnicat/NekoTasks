@@ -37,28 +37,45 @@ import SwiftData
 
 struct CalendarView: View {
     @Environment(CalendarState.self) var state
-    @Environment(\.modelContext) private var modelContext
-
     @Query(filter: #Predicate<TaskItem> { $0.typeRaw == 1 })
     private var allEvents: [TaskItem]
+
+    @State private var editingTask: TaskItem?
+    @State private var isCreatingNew = false
 
     private let calendar = Calendar.current
 
     var body: some View {
         @Bindable var state = state
 
-        VStack(spacing: 0) {
-            DateNavigator()
-                .padding(.horizontal)
-                .padding(.vertical, 8)
+        NavigationStack {
+            VStack(spacing: 0) {
+                DateNavigator()
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
 
-            Divider()
+                Divider()
 
-            switch state.viewType {
-            case .day:
-                DayEventList(events: eventsForSelectedDate)
-            case .week:
-                WeekView(allEvents: allEvents)
+                switch state.viewType {
+                case .day:
+                    DayEventList(events: eventsForSelectedDate)
+                case .week:
+                    WeekView(allEvents: allEvents)
+                }
+            }
+            .navigationTitle("Events")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        isCreatingNew = true
+                        let newEvent = TaskItem(title: "", type: .event)
+                        newEvent.startTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: state.selectedDate)
+                        newEvent.endTime = calendar.date(bySettingHour: 10, minute: 0, second: 0, of: state.selectedDate)
+                        editingTask = newEvent
+                    } label: {
+                        Label("Add Event", systemImage: "plus")
+                    }
+                }
             }
         }
         .sheet(isPresented: $state.showingDatePicker) {
@@ -67,55 +84,10 @@ struct CalendarView: View {
         .sheet(isPresented: $state.showingFilterSheet) {
             FilterSheet()
         }
-        .sheet(item: $state.editingEvent) { event in
-            ShowTask(
-                task: event,
-                onCancel: {
-                    state.editingEvent = nil
-                    state.isCreatingNew = false
-                },
-                onSave: {
-                    if state.isCreatingNew {
-                        let trimmed = event.title.trimmingCharacters(in: .whitespacesAndNewlines)
-                        guard !trimmed.isEmpty else {
-                            state.editingEvent = nil
-                            state.isCreatingNew = false
-                            return
-                        }
-                        event.title = trimmed
-                        modelContext.insert(event)
-                    }
-                    state.editingEvent = nil
-                    state.isCreatingNew = false
-                }
-            )
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .addNewItem)) { notification in
-            if let tab = notification.object as? AppTab, tab == .calendar {
-                addEvent()
-            }
-        }
+        .taskEditor(editingTask: $editingTask, isCreatingNew: $isCreatingNew)
     }
-
-    // MARK: - Helpers
 
     private var eventsForSelectedDate: [TaskItem] {
         allEvents.eventsOn(date: state.selectedDate, filter: state.filter)
     }
-
-    private func addEvent() {
-        state.isCreatingNew = true
-        let newEvent = TaskItem(title: "", type: .event)
-        newEvent.startTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: state.selectedDate)
-        newEvent.endTime = calendar.date(bySettingHour: 10, minute: 0, second: 0, of: state.selectedDate)
-        state.editingEvent = newEvent
-    }
-}
-
-// MARK: - Preview
-
-#Preview {
-    CalendarView()
-        .environment(CalendarState())
-        .modelContainer(for: [TaskItem.self, TaskLabel.self], inMemory: true)
 }

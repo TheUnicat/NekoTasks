@@ -31,6 +31,10 @@ struct ContentView: View {
             AssistantView()
                 .tabItem { Label("Assistant", systemImage: "sparkles") }
                 .tag(AppTab.assistant)
+
+            SettingsView()
+                .tabItem { Label("Settings", systemImage: "gearshape") }
+                .tag(AppTab.settings)
         }
     }
 }

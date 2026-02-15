@@ -7,12 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		034AA9EF2F423B8F002F45C0 /* LabelPickerRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 034AA9EE2F423B8F002F45C0 /* LabelPickerRow.swift */; };
 		A10000030000000000000003 /* TaskItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000030000000000000003 /* TaskItem.swift */; };
 		A10000040000000000000004 /* TaskLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000040000000000000004 /* TaskLabel.swift */; };
 		A10000050000000000000005 /* RecurrenceRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000050000000000000005 /* RecurrenceRule.swift */; };
-		A10000070000000000000007 /* TaskRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000070000000000000007 /* TaskRow.swift */; };
-		A1000010000000000000000A /* ShowTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000010000000000000000A /* ShowTask.swift */; };
-		A1000012000000000000000C /* EventCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000012000000000000000C /* EventCard.swift */; };
 		A1000013000000000000000D /* RecurrenceRuleUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000013000000000000000D /* RecurrenceRuleUI.swift */; };
 		A1000014000000000000000E /* NotificationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000014000000000000000E /* NotificationHelper.swift */; };
 		A1000015000000000000000F /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000015000000000000000F /* NotificationManager.swift */; };
@@ -22,13 +20,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		034AA9EE2F423B8F002F45C0 /* LabelPickerRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabelPickerRow.swift; sourceTree = "<group>"; };
 		A00000010000000000000001 /* NekoTasks.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NekoTasks.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000030000000000000003 /* TaskItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskItem.swift; sourceTree = "<group>"; };
 		A20000040000000000000004 /* TaskLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskLabel.swift; sourceTree = "<group>"; };
 		A20000050000000000000005 /* RecurrenceRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurrenceRule.swift; sourceTree = "<group>"; };
-		A20000070000000000000007 /* TaskRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRow.swift; sourceTree = "<group>"; };
-		A2000010000000000000000A /* ShowTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowTask.swift; sourceTree = "<group>"; };
-		A2000012000000000000000C /* EventCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventCard.swift; sourceTree = "<group>"; };
 		A2000013000000000000000D /* RecurrenceRuleUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurrenceRuleUI.swift; sourceTree = "<group>"; };
 		A2000014000000000000000E /* NotificationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationHelper.swift; sourceTree = "<group>"; };
 		A2000015000000000000000F /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
@@ -43,6 +39,8 @@
 		034AA9D72F42293D002F45C0 /* Apps */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Apps; sourceTree = "<group>"; };
 		034AA9DB2F422F89002F45C0 /* Tasks */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Tasks; sourceTree = "<group>"; };
 		034AA9DF2F422FC5002F45C0 /* Assistant */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Assistant; sourceTree = "<group>"; };
+		034AA9E02F423185002F45C0 /* TaskEditorPopup */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = TaskEditorPopup; sourceTree = "<group>"; };
+		034AA9EB2F423AAF002F45C0 /* Settings */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Settings; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -99,12 +97,12 @@
 		A40000050000000000000005 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				034AA9EE2F423B8F002F45C0 /* LabelPickerRow.swift */,
+				034AA9EB2F423AAF002F45C0 /* Settings */,
+				034AA9E02F423185002F45C0 /* TaskEditorPopup */,
 				034AA9DF2F422FC5002F45C0 /* Assistant */,
 				034AA9DB2F422F89002F45C0 /* Tasks */,
 				034AA9AF2F4224F6002F45C0 /* Calendar */,
-				A20000070000000000000007 /* TaskRow.swift */,
-				A2000010000000000000000A /* ShowTask.swift */,
-				A2000012000000000000000C /* EventCard.swift */,
 				A2000013000000000000000D /* RecurrenceRuleUI.swift */,
 			);
 			path = Views;
@@ -148,6 +146,8 @@
 				034AA9D72F42293D002F45C0 /* Apps */,
 				034AA9DB2F422F89002F45C0 /* Tasks */,
 				034AA9DF2F422FC5002F45C0 /* Assistant */,
+				034AA9E02F423185002F45C0 /* TaskEditorPopup */,
+				034AA9EB2F423AAF002F45C0 /* Settings */,
 			);
 			name = NekoTasks;
 			productName = NekoTasks;
@@ -205,11 +205,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				A10000030000000000000003 /* TaskItem.swift in Sources */,
+				034AA9EF2F423B8F002F45C0 /* LabelPickerRow.swift in Sources */,
 				A10000040000000000000004 /* TaskLabel.swift in Sources */,
 				A10000050000000000000005 /* RecurrenceRule.swift in Sources */,
-				A10000070000000000000007 /* TaskRow.swift in Sources */,
-				A1000010000000000000000A /* ShowTask.swift in Sources */,
-				A1000012000000000000000C /* EventCard.swift in Sources */,
 				A1000013000000000000000D /* RecurrenceRuleUI.swift in Sources */,
 				A1000014000000000000000E /* NotificationHelper.swift in Sources */,
 				A1000015000000000000000F /* NotificationManager.swift in Sources */,

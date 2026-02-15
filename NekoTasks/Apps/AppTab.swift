@@ -16,6 +16,7 @@ enum AppTab: Hashable {
     case tasks
     case calendar
     case assistant
+    case settings
 }
 
 extension Notification.Name {
