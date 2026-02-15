@@ -27,6 +27,7 @@
 - **Body text**: (e.g., system default)
 - **Card titles**: Currently `.headline`
 - **Metadata**: Currently `.caption` / `.caption2`
+- **Text fields**: No blue border highlight when focused
 
 ---
 

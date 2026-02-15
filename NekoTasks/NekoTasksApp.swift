@@ -6,7 +6,8 @@
 //
 //  CLAUDE NOTES:
 //  App entry point. Sets up SwiftData ModelContainer (TaskItem + TaskLabel, persistent).
-//  Requests notification permissions on launch. Sets NotificationDelegate for foreground banners.
+//  Requests notification permissions on launch. Uses NotificationManager as the single delegate
+//  for both foreground presentation and action handling (Complete/Snooze).
 //  Body just renders ContentView inside a WindowGroup with the shared container.
 //
 
@@ -32,11 +33,8 @@ struct NekoTasksApp: App {
     }()
 
     init() {
-        // Ask for notification permission when the app starts
         NotificationHelper.requestAuthorization()
-
-        // Optional: Show notifications while app is in the foreground
-        UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
+        NotificationManager.shared.configure()
     }
 
     var body: some Scene {
@@ -48,14 +46,3 @@ struct NekoTasksApp: App {
     }
 }
 
-// MARK: - Notification Delegate
-
-final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
-    static let shared = NotificationDelegate()
-    private override init() {}
-
-    func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
-        [.banner, .sound, .badge]
-    }
-}

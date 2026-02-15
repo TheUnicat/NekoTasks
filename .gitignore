@@ -1,4 +1,21 @@
+# macOS
 .DS_Store
-*.xcodeproj/
-Preview Content/
-.gitignore
+.AppleDouble
+.LSOverride
+
+# Xcode
+build/
+DerivedData/
+*.xcuserdata
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+
+# Swift Package Manager
+.build/
+Packages/
+Package.resolved
+
+# Deprecated files
+NekoTasks/New Folder/
+NekoTasks/New Folder 2/

@@ -6,12 +6,12 @@
 //
 //  CLAUDE NOTES:
 //  Rich notification manager (singleton). Registers TASK_REMINDER category with "Mark Complete" and
-//  "Snooze 15 min" actions. Generates stable notification IDs from task title + creationDate.
+//  "Snooze 15 min" actions. Uses TaskItem.notificationID (stable UUID) for notification identifiers.
 //  scheduleReminder() — calendar-based trigger from task deadline.
 //  scheduleSnooze() — time-interval trigger (default 15 min).
 //  cancelReminder() — removes pending + delivered notifications for a task.
-//  UNUserNotificationCenterDelegate: forwards Complete/Snooze actions via .taskNotificationAction notification.
-//  Note: configure() sets itself as delegate, but NekoTasksApp currently uses NotificationDelegate instead.
+//  UNUserNotificationCenterDelegate: handles foreground presentation + Complete/Snooze actions.
+//  configure() must be called once at app launch (from NekoTasksApp.init).
 //
 
 import Foundation
@@ -56,10 +56,8 @@ final class NotificationManager: NSObject {
         UNUserNotificationCenter.current().setNotificationCategories([category])
     }
 
-    // Use a stable identifier for each task's notification
     func identifier(for task: TaskItem) -> String {
-        // Combines title and creationDate to keep it stable for the task
-        "task-\(task.title)-\(task.creationDate.timeIntervalSince1970)"
+        "task-\(task.notificationID)"
     }
 
     func scheduleReminder(for task: TaskItem) {

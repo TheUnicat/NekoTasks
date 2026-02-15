@@ -39,41 +39,6 @@ Three-tab layout: Tasks, Events (Calendar), Assistant (AI).
 - `@available(iOS 26, macOS 26, *)` gating for FoundationModels code.
 - Recurrence rules use composite pattern with operator overloads (&&, ||, !).
 
-## Hard-Won Lessons
-
-### AI Tool Calling (AddItemTool)
-- The on-device 3B model is **unreliable** with tool calling. System instructions must be
-  very directive ("You MUST use the addItem tool") to improve compliance.
-- Tool arguments must be as simple as possible. Non-optional String fields that are logically
-  optional (like "notes") should be declared as `String?` to avoid the model failing to
-  generate valid arguments.
-- `PendingItemStore` is `@unchecked Sendable` — safe because `tool.call()` runs during
-  `session.respond()` (all calls complete before respond returns) and `drain()` after.
-- AI-created events MUST have `startTime` set or they won't appear in CalendarView
-  (CalendarView filters by startTime/deadline for non-recurring events).
-- Use explicit `try modelContext.save()` after inserting AI-created items. SwiftData
-  auto-save is unreliable from async `Task {}` contexts.
-- The `Task {}` block must use `@MainActor in` to ensure modelContext operations
-  happen on the main thread.
-
-### RecurrenceRulePicker State Sync
-- The picker uses internal `@State` variables (selectedWeekdays, repeatType, etc.) that
-  are separate from the parent's `@Binding var rule: AnyRule?`.
-- `onChange(of: constructedRule)` syncs internal state → parent binding, but does NOT fire
-  on initial render (SwiftUI design: no previous value to compare).
-- Without `onAppear { loadFromRule(rule) }`, editing an existing event shows blank picker
-  defaults instead of the current rule state.
-- `loadFromRule()` uses recursive `decompose()` to handle `.and()` composites — processes
-  both sides, so `.and(.weekdays([.mon]), .everyOtherWeek(1))` correctly sets both
-  selectedWeekdays and biweekly state.
-- The flow is one-directional after init: parent binding → (onAppear) → internal state →
-  constructedRule → (onChange) → parent binding.
-
-### TextField Focus Ring (macOS)
-- `.textFieldStyle(.roundedBorder)` shows a blue focus ring on macOS when focused.
-- Fix: use `.textFieldStyle(.plain)` with custom `.background(RoundedRectangle(...))`.
-- ShowTask already uses LeftTextField (NSViewRepresentable) with `focusRingType = .none`.
-
 ## File Inventory
 
 | File | Purpose | Status |

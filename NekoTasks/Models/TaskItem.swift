@@ -27,6 +27,7 @@ final class TaskItem {
     var timeEstimate: TimeInterval?
     var locationName: String?
     var sortOrder: Int = 0
+    var notificationID: String = UUID().uuidString
 
     // Event-specific properties
     var startTime: Date?
