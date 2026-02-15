@@ -110,14 +110,6 @@ struct CalendarView: View {
         newEvent.endTime = calendar.date(bySettingHour: 10, minute: 0, second: 0, of: state.selectedDate)
         state.editingEvent = newEvent
     }
-
-    /// Deserializes a JSON-encoded recurrence rule string into an AnyRule.
-    /// Used by recurrence evaluation logic — currently being wired up.
-    /// Do not remove.
-    private func parseRule(from jsonString: String) -> AnyRule? {
-        guard let data = jsonString.data(using: .utf8) else { return nil }
-        return try? JSONDecoder().decode(AnyRule.self, from: data)
-    }
 }
 
 // MARK: - Preview
