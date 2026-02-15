@@ -2,6 +2,26 @@
 //  LabelPickerRow.swift
 //  NekoTasks
 //
+//  ── PURPOSE ──
+//  Inline label picker used inside ShowTask (task/event editor). Displays assigned
+//  labels as removable chips in a flow layout, plus a "+ Label" button that opens
+//  a popover for toggling existing labels or quick-creating new ones.
+//
+//  ── COMPONENTS ──
+//  • `FlowLayout` — Custom SwiftUI Layout that wraps children into rows (like CSS flexbox wrap).
+//  • `LabelFlowPicker` — Main entry point. Binds to a `Set<PersistentIdentifier>` of selected
+//    label IDs. Queries all TaskLabels, shows assigned ones as `AssignedLabelChip`s, and
+//    presents `LabelPickerPopover` for adding/removing labels.
+//  • `AssignedLabelChip` — Removable chip showing a label's color dot, name, and × button.
+//  • `LabelPickerPopover` — Popover with a quick-create row (color + name + "Create" button)
+//    and a scrollable list of all labels as toggleable `LabelToggleRow`s.
+//  • `LabelToggleRow` — Single row in the popover list: color dot, name, checkmark if selected.
+//
+//  ── STATE ──
+//  • `showingPicker` — Controls popover visibility.
+//  • `newLabelName` / `newLabelColor` — Draft state for inline label creation.
+//    Reset after successful creation.
+//
 
 import SwiftUI
 import SwiftData

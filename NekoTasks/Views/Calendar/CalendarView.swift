@@ -40,9 +40,6 @@ struct CalendarView: View {
     @Query(filter: #Predicate<TaskItem> { $0.typeRaw == 1 })
     private var allEvents: [TaskItem]
 
-    @State private var editingTask: TaskItem?
-    @State private var isCreatingNew = false
-
     private let calendar = Calendar.current
 
     var body: some View {
@@ -67,11 +64,11 @@ struct CalendarView: View {
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
-                        isCreatingNew = true
+                        state.isCreatingNew = true
                         let newEvent = TaskItem(title: "", type: .event)
                         newEvent.startTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: state.selectedDate)
                         newEvent.endTime = calendar.date(bySettingHour: 10, minute: 0, second: 0, of: state.selectedDate)
-                        editingTask = newEvent
+                        state.editingEvent = newEvent
                     } label: {
                         Label("Add Event", systemImage: "plus")
                     }
@@ -84,7 +81,7 @@ struct CalendarView: View {
         .sheet(isPresented: $state.showingFilterSheet) {
             FilterSheet()
         }
-        .taskEditor(editingTask: $editingTask, isCreatingNew: $isCreatingNew)
+        .taskEditor(editingTask: $state.editingEvent, isCreatingNew: $state.isCreatingNew)
     }
 
     private var eventsForSelectedDate: [TaskItem] {

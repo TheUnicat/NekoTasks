@@ -2,33 +2,49 @@
 //  LabelEditorPopup.swift
 //  NekoTasks
 //
+//  ── PURPOSE ──
+//  Modal form for creating or editing a single TaskLabel. Presented as a sheet
+//  from SettingsView's LabelSettingsSection.
+//
+//  ── BEHAVIOR ──
+//  • Always receives a TaskLabel to edit (which may or may not be in the model
+//    context yet). Writes name/color back to the label on save.
+//  • Follows the same dismiss pattern as ShowTask: the `onCancel`/`onSave`
+//    callbacks nil the parent's item binding, then `dismiss()` is called.
+//  • The parent decides whether to insert the label into the model context
+//    (for new labels) — this popup only writes properties.
+//
+//  ── PROPERTIES ──
+//  • `label` — The TaskLabel to edit. May be new (not yet inserted) or existing.
+//  • `onCancel` / `onSave` — Callbacks for the parent to nil its sheet binding.
+//  • `name` / `selectedColor` — Local draft state initialized from the label.
+//
 
 import SwiftUI
 import SwiftData
 
 struct LabelEditorPopup: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
+    @Bindable var label: TaskLabel
 
-    var existingLabel: TaskLabel?
-    var onCancel: (() -> Void)?
-    var onSave: (() -> Void)?
+    let onCancel: (() -> Void)?
+    let onSave: (() -> Void)?
 
     @State private var name: String
     @State private var selectedColor: Color
 
     init(
-        existingLabel: TaskLabel? = nil,
+        label: TaskLabel,
         onCancel: (() -> Void)? = nil,
         onSave: (() -> Void)? = nil
     ) {
-        self.existingLabel = existingLabel
+        self.label = label
         self.onCancel = onCancel
         self.onSave = onSave
 
-        _name = State(initialValue: existingLabel?.name ?? "")
+        _name = State(initialValue: label.name)
 
-        if let hex = existingLabel?.colorHex, let color = Color(hex: hex) {
+        if let hex = label.colorHex, let color = Color(hex: hex) {
             _selectedColor = State(initialValue: color)
         } else {
             _selectedColor = State(initialValue: .blue)
@@ -37,7 +53,7 @@ struct LabelEditorPopup: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Text(existingLabel == nil ? "New Label" : "Edit Label")
+            Text(label.modelContext == nil ? "New Label" : "Edit Label")
                 .font(.title2.bold())
                 .padding()
 
@@ -89,7 +105,7 @@ struct LabelEditorPopup: View {
                 Spacer()
 
                 Button("Save") {
-                    commitLabel()
+                    commitEdits()
                     onSave?()
                     dismiss()
                 }
@@ -103,21 +119,17 @@ struct LabelEditorPopup: View {
         .environment(\.locale, Locale(identifier: "en_US"))
     }
 
-    private func commitLabel() {
-        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let hex = selectedColor.toHex()
-
-        if let existingLabel {
-            existingLabel.name = trimmedName
-            existingLabel.colorHex = hex
-        } else {
-            let label = TaskLabel(name: trimmedName, colorHex: hex)
-            modelContext.insert(label)
-        }
+    private func commitEdits() {
+        label.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        label.colorHex = selectedColor.toHex()
     }
 }
 
 #Preview {
-    LabelEditorPopup()
-        .modelContainer(for: [TaskItem.self, TaskLabel.self], inMemory: true)
+    LabelEditorPopup(
+        label: TaskLabel(name: "", colorHex: nil),
+        onCancel: {},
+        onSave: {}
+    )
+    .modelContainer(for: [TaskItem.self, TaskLabel.self], inMemory: true)
 }
