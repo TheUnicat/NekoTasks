@@ -15,7 +15,6 @@
 		A10000060000000000000006 /* AppTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000060000000000000006 /* AppTab.swift */; };
 		A10000070000000000000007 /* TaskRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000070000000000000007 /* TaskRow.swift */; };
 		A1000010000000000000000A /* ShowTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000010000000000000000A /* ShowTask.swift */; };
-		A1000011000000000000000B /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000011000000000000000B /* CalendarView.swift */; };
 		A1000012000000000000000C /* EventCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000012000000000000000C /* EventCard.swift */; };
 		A1000013000000000000000D /* RecurrenceRuleUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000013000000000000000D /* RecurrenceRuleUI.swift */; };
 		A1000014000000000000000E /* NotificationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000014000000000000000E /* NotificationHelper.swift */; };
@@ -36,7 +35,6 @@
 		A20000060000000000000006 /* AppTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTab.swift; sourceTree = "<group>"; };
 		A20000070000000000000007 /* TaskRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRow.swift; sourceTree = "<group>"; };
 		A2000010000000000000000A /* ShowTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowTask.swift; sourceTree = "<group>"; };
-		A2000011000000000000000B /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
 		A2000012000000000000000C /* EventCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventCard.swift; sourceTree = "<group>"; };
 		A2000013000000000000000D /* RecurrenceRuleUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurrenceRuleUI.swift; sourceTree = "<group>"; };
 		A2000014000000000000000E /* NotificationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationHelper.swift; sourceTree = "<group>"; };
@@ -48,20 +46,8 @@
 		A20000200000000000000014 /* AssistantView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		03C97AFA2F3BCBCC00996871 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Untitled.swift,
-			);
-			target = A50000010000000000000001 /* NekoTasks */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		03C97AF72F399D5500996871 /* New Folder */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (03C97AFA2F3BCBCC00996871 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = "New Folder"; sourceTree = "<group>"; };
-		03C97AF82F3A538900996871 /* New Folder 2 */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "New Folder 2"; sourceTree = "<group>"; };
-		03C97AFB2F4222A700996871 /* New Folder */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "New Folder"; sourceTree = "<group>"; };
+		034AA9AF2F4224F6002F45C0 /* Calendar */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Calendar; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -86,8 +72,6 @@
 		A40000020000000000000002 /* NekoTasks */ = {
 			isa = PBXGroup;
 			children = (
-				03C97AF82F3A538900996871 /* New Folder 2 */,
-				03C97AF72F399D5500996871 /* New Folder */,
 				A20000010000000000000001 /* NekoTasksApp.swift */,
 				A20000020000000000000002 /* ContentView.swift */,
 				A40000040000000000000004 /* Models */,
@@ -121,10 +105,9 @@
 		A40000050000000000000005 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				03C97AFB2F4222A700996871 /* New Folder */,
+				034AA9AF2F4224F6002F45C0 /* Calendar */,
 				A20000070000000000000007 /* TaskRow.swift */,
 				A2000010000000000000000A /* ShowTask.swift */,
-				A2000011000000000000000B /* CalendarView.swift */,
 				A2000012000000000000000C /* EventCard.swift */,
 				A2000013000000000000000D /* RecurrenceRuleUI.swift */,
 				A20000200000000000000014 /* AssistantView.swift */,
@@ -167,9 +150,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				03C97AF72F399D5500996871 /* New Folder */,
-				03C97AF82F3A538900996871 /* New Folder 2 */,
-				03C97AFB2F4222A700996871 /* New Folder */,
+				034AA9AF2F4224F6002F45C0 /* Calendar */,
 			);
 			name = NekoTasks;
 			productName = NekoTasks;
@@ -234,7 +215,6 @@
 				A10000060000000000000006 /* AppTab.swift in Sources */,
 				A10000070000000000000007 /* TaskRow.swift in Sources */,
 				A1000010000000000000000A /* ShowTask.swift in Sources */,
-				A1000011000000000000000B /* CalendarView.swift in Sources */,
 				A1000012000000000000000C /* EventCard.swift in Sources */,
 				A1000013000000000000000D /* RecurrenceRuleUI.swift in Sources */,
 				A1000014000000000000000E /* NotificationHelper.swift in Sources */,
