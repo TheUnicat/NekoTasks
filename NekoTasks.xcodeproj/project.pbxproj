@@ -19,7 +19,6 @@
 		A10000160000000000000010 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000160000000000000010 /* Assets.xcassets */; };
 		A10000170000000000000011 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000170000000000000011 /* Preview Assets.xcassets */; };
 		A10000180000000000000012 /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000190000000000000013 /* AIService.swift */; };
-		A10000190000000000000013 /* AssistantView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000200000000000000014 /* AssistantView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,13 +36,13 @@
 		A20000170000000000000011 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		A20000180000000000000012 /* NekoTasks.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NekoTasks.entitlements; sourceTree = "<group>"; };
 		A20000190000000000000013 /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
-		A20000200000000000000014 /* AssistantView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		034AA9AF2F4224F6002F45C0 /* Calendar */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Calendar; sourceTree = "<group>"; };
 		034AA9D72F42293D002F45C0 /* Apps */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Apps; sourceTree = "<group>"; };
 		034AA9DB2F422F89002F45C0 /* Tasks */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Tasks; sourceTree = "<group>"; };
+		034AA9DF2F422FC5002F45C0 /* Assistant */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Assistant; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -100,13 +99,13 @@
 		A40000050000000000000005 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				034AA9DF2F422FC5002F45C0 /* Assistant */,
 				034AA9DB2F422F89002F45C0 /* Tasks */,
 				034AA9AF2F4224F6002F45C0 /* Calendar */,
 				A20000070000000000000007 /* TaskRow.swift */,
 				A2000010000000000000000A /* ShowTask.swift */,
 				A2000012000000000000000C /* EventCard.swift */,
 				A2000013000000000000000D /* RecurrenceRuleUI.swift */,
-				A20000200000000000000014 /* AssistantView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -148,6 +147,7 @@
 				034AA9AF2F4224F6002F45C0 /* Calendar */,
 				034AA9D72F42293D002F45C0 /* Apps */,
 				034AA9DB2F422F89002F45C0 /* Tasks */,
+				034AA9DF2F422FC5002F45C0 /* Assistant */,
 			);
 			name = NekoTasks;
 			productName = NekoTasks;
@@ -214,7 +214,6 @@
 				A1000014000000000000000E /* NotificationHelper.swift in Sources */,
 				A1000015000000000000000F /* NotificationManager.swift in Sources */,
 				A10000180000000000000012 /* AIService.swift in Sources */,
-				A10000190000000000000013 /* AssistantView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
