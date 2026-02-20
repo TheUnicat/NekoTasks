@@ -8,10 +8,10 @@
 //  AI chat interface. Outer AssistantView wraps an availability check (macOS 26+ required for FoundationModels).
 //  Inner AssistantContent: checks SystemLanguageModel.default.availability, shows chat or unavailable message.
 //  Chat: message list (ScrollViewReader for auto-scroll), empty state, TypingBubble (animated dots), text input.
-//  sendMessage() sets currentToolContext with modelContext, then calls service.send(). Tools insert items
-//  directly into SwiftData during session.respond(). After the call, we save the context explicitly.
+//  sendMessage() calls pipeline.send(message:modelContext:), which manages currentToolContext internally.
+//  Tools insert items directly into SwiftData during session.respond(). AIPipeline saves the context after.
 //  Task block uses @MainActor to ensure model context operations run on main thread.
-//  Clear button resets messages and calls service.resetSession() (new LanguageModelSession, no persistence).
+//  Clear button resets messages and calls pipeline.resetSession() (new LanguageModelSession, no persistence).
 //  MessageBubble: user=blue right-aligned, assistant=gray left-aligned. TypingBubble: 3 bouncing dots.
 //  TextField uses .plain style with gray background to avoid macOS blue focus ring.
 //
@@ -47,7 +47,7 @@ struct AssistantView: View {
 @available(iOS 26, macOS 26, *)
 private struct AssistantContent: View {
     @Environment(\.modelContext) private var modelContext
-    @State private var service = AIService()
+    @State private var pipeline = AIPipeline()
     @State private var messages: [ChatMessage] = []
     @State private var inputText = ""
     @State private var isLoading = false
@@ -187,24 +187,9 @@ private struct AssistantContent: View {
 
         Task { @MainActor in
             do {
-                // Set up tool context so tools can access modelContext
-                currentToolContext = ToolExecutionContext(modelContext: modelContext)
-
-                let response = try await service.send(message: text)
-
-                // Save any items created by tools during the session
-                if let context = currentToolContext, !context.createdItems.isEmpty {
-                    do {
-                        try modelContext.save()
-                    } catch {
-                        print("NekoTasks: Failed to save AI-created items: \(error)")
-                    }
-                }
-                currentToolContext = nil
-
+                let response = try await pipeline.send(message: text, modelContext: modelContext)
                 messages.append(ChatMessage(role: .assistant, content: response))
             } catch {
-                currentToolContext = nil
                 messages.append(ChatMessage(role: .assistant, content: "Sorry, something went wrong: \(error.localizedDescription)"))
             }
             isLoading = false
@@ -213,7 +198,7 @@ private struct AssistantContent: View {
 
     private func clearChat() {
         messages.removeAll()
-        service.resetSession()
+        pipeline.resetSession()
     }
 }
 
