@@ -25,7 +25,7 @@ struct TasksView: View {
             ScrollView {
                 LazyVStack(spacing: 14) {
                     ForEach(visibleTasks) { task in
-                        TaskCard(task: task, onToggleComplete: {
+                        TaskRow(task: task, onToggleComplete: {
                             if task.isCompleted {
                                 scheduleHide(task)
                             } else {
@@ -66,9 +66,7 @@ struct TasksView: View {
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
             guard completionTokens[id] == token else { return }
-            withAnimation(.easeOut(duration: 0.4)) {
-                recentlyCompleted.remove(id)
-            }
+            recentlyCompleted.remove(id)
             completionTokens.removeValue(forKey: id)
         }
     }

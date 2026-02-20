@@ -19,7 +19,7 @@ import SwiftData
 
 // MARK: - Main Task Card
 
-struct TaskCard: View {
+struct TaskRow: View {
     @Bindable var task: TaskItem
     var onToggleComplete: (() -> Void)? = nil
     var onEdit: () -> Void = {}
@@ -496,7 +496,7 @@ extension Color {
 // MARK: - Preview
 
 #Preview("Default Task") {
-    TaskCard(task: TaskItem(title: "Sample Task"))
+    TaskRow(task: TaskItem(title: "Sample Task"))
         .padding()
         .modelContainer(for: TaskItem.self, inMemory: true)
 }
@@ -506,7 +506,7 @@ extension Color {
     task.importance = 2
     task.timeEstimate = 30 * 60 // 30 minutes
 
-    return TaskCard(task: task)
+    return TaskRow(task: task)
         .padding()
         .modelContainer(for: TaskItem.self, inMemory: true)
 }
@@ -518,7 +518,7 @@ extension Color {
     )
     task.importance = 3
 
-    return TaskCard(task: task)
+    return TaskRow(task: task)
         .padding()
         .modelContainer(for: TaskItem.self, inMemory: true)
 }
@@ -527,7 +527,7 @@ extension Color {
     let task = TaskItem(title: "Completed task", deadline: Date())
     task.isCompleted = true
 
-    return TaskCard(task: task)
+    return TaskRow(task: task)
         .padding()
         .modelContainer(for: TaskItem.self, inMemory: true)
 }
