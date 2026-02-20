@@ -24,17 +24,17 @@ The top-level `App` struct. Responsibilities:
 ### `ContentView.swift` — Root TabView + TasksView
 
 Root view with a `TabView` (4 tabs driven by `AppTab` enum):
-- **Tasks** → `TasksView` (defined inline in this file)
+- **Tasks** → `TasksView` (defined in `Views/Tasks/TaskView.swift`)
 - **Events** → `CalendarView`
 - **Assistant** → `AssistantView`
 - **Settings** → `SettingsView`
 
 `TasksView` is defined in `Views/Tasks/`. It is the primary tasks list view:
 - `@Query` fetches only tasks (`typeRaw == 0`), sorted by `creationDate`.
-- `visibleTasks` computed property: hides completed tasks unless they were recently completed (tracked by `recentlyCompletedIDs` — a `@State Set<PersistentIdentifier>`). Also filters out subtasks (items with a non-nil `parent`) so only top-level tasks appear.
+- `visibleTasks` computed property: hides completed tasks unless they were recently completed (tracked by `recentlyCompleted` — a `@State Set<PersistentIdentifier>`). Also filters out subtasks (items with a non-nil `parent`) so only top-level tasks appear.
 - `"+"` toolbar button creates a new `TaskItem(title: "")` **outside** the model context (not inserted yet), then opens it in the editor sheet. Only inserted into the context on Save. This is the "create-then-insert" pattern used throughout the app.
 - Uses the `.taskEditor(editingTask:isCreatingNew:)` modifier (from `TaskEditorModifier.swift`) to present `ShowTask` as a sheet.
-- `scheduleHide()`: When a task is marked complete, a 5-second delayed `Task` hides it from the list. Uses a token-based cancellation system (`hideTokens`) so marking a task incomplete within 5 seconds cancels the hide.
+- `scheduleHide()`: When a task is marked complete, a 5-second `DispatchQueue.main.asyncAfter` hides it from the list. Uses a token-based cancellation system (`completionTokens`) so marking a task incomplete within 5 seconds cancels the hide.
 
 ---
 
@@ -55,7 +55,7 @@ NekoTasksApp
   ├── Creates: CalendarState → injected globally via .environment()
   ├── Inits: NotificationHelper + NotificationManager
   └── Renders: ContentView
-        ├── Tab: TasksView (defined here in ContentView.swift)
+        ├── Tab: TasksView  ← Views/Tasks/TaskView.swift
         ├── Tab: CalendarView  ← Views/Calendar/
         ├── Tab: AssistantView ← Views/Assistant/
         └── Tab: SettingsView  ← Views/Settings/

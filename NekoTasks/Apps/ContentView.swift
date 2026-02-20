@@ -5,11 +5,11 @@
 //  Created by TheUnicat on 1/24/26.
 //
 //  CLAUDE NOTES:
-//  Root view. TabView with 3 tabs driven by AppTab enum: Tasks, Events (CalendarView), Assistant.
-//  TasksView (defined here) queries only tasks (typeRaw==0), displays TaskCards in a LazyVStack,
-//  opens ShowTask in a sheet for editing. "+" button creates a new TaskItem outside the model context
-//  and only inserts on save (same pattern as CalendarView). Completed tasks are hidden on launch and
-//  fade out 5 seconds after being marked complete.
+//  Root view. TabView with 4 tabs driven by AppTab enum: Tasks, Events (CalendarView), Assistant, Settings.
+//  TasksView (defined in Views/Tasks/TaskView.swift) queries only tasks (typeRaw==0), displays TaskRows
+//  in a LazyVStack, opens ShowTask in a sheet for editing. "+" button creates a new TaskItem outside
+//  the model context and only inserts on save (same pattern as CalendarView). Completed tasks are hidden
+//  on launch and fade out 5 seconds after being marked complete.
 //
 
 import SwiftUI

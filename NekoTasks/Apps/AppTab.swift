@@ -5,7 +5,7 @@
 //  Created by TheUnicat on 1/24/26.
 //
 //  CLAUDE NOTES:
-//  Tab enum for ContentView's TabView: .tasks, .calendar, .assistant.
+//  Tab enum for ContentView's TabView: .tasks, .calendar, .assistant, .settings.
 //  Also defines Notification.Name extensions: .addNewItem (used by CalendarView to receive "add event"
 //  broadcasts) and .taskNotificationAction (used by NotificationManager for complete/snooze actions).
 //

@@ -140,7 +140,7 @@ final class CreateTaskTool: Tool {
         @Guide(description: "Priority level: 1 = low, 2 = medium, 3 = high", .anyOf(["1", "2", "3"]))
         var priority: String?
 
-        @Guide(description: "Comma-separated label names to categorize the task")
+        @Guide(description: "Comma-separated label names to categorize the task. Try to add at least one label to each task/event. You can infer labels. Do not create new labels without the user explicitly asking. Try to minimize number of labels.")
         var labels: String?
 
         @Guide(description: "JSON array of subtask objects, ordered sequentially. Each object: {\"title\":\"...\", \"description\":\"...\", \"deadline\":\"ISO8601\", \"timeEstimate\":\"HH:MM\", \"priority\":\"1-3\"}. Only title is required.")

@@ -6,7 +6,7 @@
 //
 //  CLAUDE NOTES:
 //  Task display card and all its subcomponents. Used in TasksView's list.
-//  Main: TaskCard — rounded rect card (max 640pt) with priority border, checkbox, title, due badge, metadata.
+//  Main: TaskRow — rounded rect card (max 640pt) with priority border, checkbox, title, due badge, metadata.
 //  Subcomponents: TopRow (title + DueBadge), MetadataRow (LabelChips + TimeEstimateChip),
 //  TaskCheckbox (animated toggle with onToggle callback), PriorityBorder (colored left edge: yellow/orange/red),
 //  DueBadge (urgency-based: Overdue/Today/Tomorrow/weekday/date), LabelChips (shows up to 2 + overflow),

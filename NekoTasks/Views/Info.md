@@ -18,7 +18,7 @@ Views/
       └── Labels/               ← Label list and row components
 ```
 
-**Note:** `TasksView` (the top-level Tasks tab view with the task list + "+" button) is defined **inline in `Apps/ContentView.swift`**, not in `Views/Tasks/`. The `Views/Tasks/` folder only contains the row/card components.
+**Note:** `TasksView` (the top-level Tasks tab view with the task list + "+" button) is defined in **`Views/Tasks/TaskView.swift`**. The `Views/Tasks/` folder also contains the row/card components (`TaskRow.swift`).
 
 ---
 
@@ -26,7 +26,7 @@ Views/
 
 | Sheet/View | Presenter | File |
 |---|---|---|
-| `ShowTask` editor sheet | `TasksView` (via `.taskEditor()` modifier) | `Apps/ContentView.swift` |
+| `ShowTask` editor sheet | `TasksView` (via `.taskEditor()` modifier) | `Views/Tasks/TaskView.swift` |
 | `ShowTask` editor sheet | `CalendarView` | `Views/Calendar/CalendarView.swift` |
 | `DatePickerSheet` | `CalendarView` | `Views/Calendar/CalendarView.swift` |
 | `FilterSheet` | `CalendarView` | `Views/Calendar/CalendarView.swift` |

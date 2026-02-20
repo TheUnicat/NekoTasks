@@ -5,7 +5,7 @@
 //  Created by TheUnicat on 1/24/26.
 //
 //  CLAUDE NOTES:
-//  Recurrence rule engine. Three main types:
+//  Recurrence rule engine to determine whether a task occurs on some day. Three main types:
 //  - Weekday enum (Sun=1..Sat=7, matches Calendar.component(.weekday))
 //  - RecurrenceContext: wraps a Date and provides weekday, dayOfMonth, weekOfMonth, weekOfYear, isLastWeekOfMonth
 //  - AnyRule (indirect enum, Codable): composite pattern with .weekdays, .daysOfMonth, .weekOfMonth,
