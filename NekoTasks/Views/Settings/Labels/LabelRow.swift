@@ -5,7 +5,7 @@ import SwiftData
 // logic in settings/settingsview
 // MARK: - Label Row
 
-private struct LabelRow: View {
+struct LabelRow: View {
     let label: TaskLabel
     var onEdit: () -> Void
 

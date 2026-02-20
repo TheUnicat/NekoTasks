@@ -140,6 +140,7 @@ struct LabelFlowPicker: View {
         guard !trimmed.isEmpty else { return }
         let label = TaskLabel(name: trimmed, colorHex: newLabelColor.toHex())
         modelContext.insert(label)
+        try? modelContext.save()
         selectedLabelIDs.insert(label.persistentModelID)
         newLabelName = ""
         newLabelColor = .blue
