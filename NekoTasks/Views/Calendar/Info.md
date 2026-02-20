@@ -116,7 +116,7 @@ Minimal display: just the event title (up to 2 lines) on a colored background. C
 
 ### `EventCard.swift` — Event display card in day list
 
-Shows: `EventTimeBlock` (start/end time in a blue box), title, location (with mappin icon), "Recurring" badge (if applicable), `LabelChips`. Uses `PriorityBorder` from `TaskRow.swift` for the left-edge color accent.
+Shows: `EventTimeBlock` (start/end time in a blue box), title, location (with mappin icon), "Recurring" badge (if applicable), `LabelChips`. Uses `PriorityBorder` from `TaskRow.swift` for the left-edge color accent (first label color, or no border if unlabelled).
 
 Max width 640 pt, rounded rect with border.
 

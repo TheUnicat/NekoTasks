@@ -3,10 +3,14 @@
 //  NekoTasks
 //
 //  CLAUDE NOTES:
-//  Public-facing @Observable orchestrator. Owns the provider, manages ToolExecutionContext
-//  lifecycle (set before send, cleared after via defer), and saves SwiftData when tools
-//  create items. AssistantView passes modelContext into send() instead of setting the
-//  global externally — the defer guarantees cleanup even on error.
+//  Public-facing @Observable orchestrator. Owns the provider and manages ToolExecutionContext
+//  lifecycle (set before send, cleared after via defer). Saves SwiftData when tools create items.
+//
+//  Session lifecycle:
+//  - Session is built LAZILY on the first send() call so that buildSystemPrompt() has a real
+//    ModelContext and can inject live labels/tasks into the prompt.
+//  - resetSession() sets sessionNeedsRebuild = true; the next send() rebuilds with fresh data.
+//  - This means "clear chat" + first new message always picks up the latest labels/tasks.
 //
 //  KNOWN ISSUES / LESSONS:
 //  - The on-device 3B model is unreliable with tool calling. System instructions must be very directive.
@@ -24,18 +28,25 @@ import FoundationModels
 @Observable
 class AIPipeline {
     private var provider: any AIProvider
+    private var sessionNeedsRebuild = true
 
     init() {
-        let p = AppleFoundationProvider()
-        provider = p
-        p.resetSession(systemPrompt: AIPromptBuilder.buildSystemPrompt())
+        provider = AppleFoundationProvider()
+        // Session is intentionally NOT built here — we need ModelContext for a rich prompt.
+        // It will be built on the first send() call.
     }
 
+    /// Call after clearing the chat. The next send() will rebuild the session with fresh context.
     func resetSession() {
-        provider.resetSession(systemPrompt: AIPromptBuilder.buildSystemPrompt())
+        sessionNeedsRebuild = true
     }
 
     func send(message: String, modelContext: ModelContext) async throws -> String {
+        if sessionNeedsRebuild {
+            provider.resetSession(systemPrompt: AIPromptBuilder.buildSystemPrompt(modelContext: modelContext))
+            sessionNeedsRebuild = false
+        }
+
         let context = ToolExecutionContext(modelContext: modelContext)
         currentToolContext = context
         defer { currentToolContext = nil }

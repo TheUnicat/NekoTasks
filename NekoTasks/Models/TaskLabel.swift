@@ -15,6 +15,7 @@
 //  ── USAGE ──
 //  • Stored in `TaskItem.labels` (many-to-many relationship managed by SwiftData).
 //  • Displayed as chips via `LabelChips` / `LabelChip` (TaskRow.swift).
+//  • The first label's colorHex drives the PriorityBorder left-edge color on TaskRow.
 //  • Managed in Settings → Labels section (SettingsView.swift → LabelEditorPopup.swift).
 //  • Assigned to tasks/events via `LabelFlowPicker` (LabelPickerRow.swift) inside ShowTask.
 //  • Used for filtering events in CalendarView via `EventFilter.labelIDs`.

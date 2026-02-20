@@ -6,9 +6,9 @@
 //
 //  CLAUDE NOTES:
 //  Task display card and all its subcomponents. Used in TasksView's list.
-//  Main: TaskRow — rounded rect card (max 640pt) with priority border, checkbox, title, due badge, metadata.
+//  Main: TaskRow — rounded rect card (max 640pt) with label color border, checkbox, title, due badge, metadata.
 //  Subcomponents: TopRow (title + DueBadge), MetadataRow (LabelChips + TimeEstimateChip),
-//  TaskCheckbox (animated toggle with onToggle callback), PriorityBorder (colored left edge: yellow/orange/red),
+//  TaskCheckbox (animated toggle with onToggle callback), PriorityBorder (colored left edge: first label color or none),
 //  DueBadge (urgency-based: Overdue/Today/Tomorrow/weekday/date), LabelChips (shows up to 2 + overflow),
 //  LabelChip (individual label capsule), TimeEstimateChip (timer icon + formatted duration).
 //  Also defines Color(hex:) extension for parsing hex color strings from TaskLabel.colorHex.
@@ -58,7 +58,7 @@ struct TaskRow: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            PriorityBorder(importance: task.importance)
+            TaskRowLeftBorder(color: task.labels.first.flatMap { Color(hex: $0.colorHex ?? "") })
 
             VStack(alignment: .leading, spacing: 0) {
                 HStack(spacing: 14) {
@@ -283,27 +283,13 @@ struct TaskCheckbox: View {
 
 // MARK: - Priority Border
 
-struct PriorityBorder: View {
-    let importance: Int?
+struct TaskRowLeftBorder: View {
+    let color: Color?
 
     var body: some View {
         Rectangle()
-            .fill(priorityColor)
-            .frame(width: priorityWidth)
-    }
-
-    private var priorityColor: Color {
-        guard let importance else { return .clear }
-        switch importance {
-        case 3...: return .red
-        case 2: return .orange
-        case 1: return .yellow
-        default: return .clear
-        }
-    }
-
-    private var priorityWidth: CGFloat {
-        importance != nil && importance! > 0 ? 5 : 0
+            .fill(color ?? .clear)
+            .frame(width: color != nil ? 5 : 0)
     }
 }
 

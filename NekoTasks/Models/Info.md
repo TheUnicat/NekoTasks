@@ -23,7 +23,7 @@ This folder contains the three core data types. There is no repository layer —
 | `creationDate` | `Date` | Set on init, shown in editor |
 | `deadline` | `Date?` | Task due date; also used by `occursOn()` for non-recurring events |
 | `timeEstimate` | `TimeInterval?` | Duration in seconds; displayed as H:MM |
-| `importance` | `Int?` | Priority 1–5; drives PriorityBorder color |
+| `importance` | `Int?` | Priority 1–5; used in editor UI only — no longer drives PriorityBorder |
 | `isCompleted` | `Bool` | Task checkbox state |
 | `labels` | `[TaskLabel]` | Many-to-many with TaskLabel |
 | `locationName` | `String?` | Event location string |

@@ -39,17 +39,13 @@ Contains every struct used to render a task card. All components are in this one
 - This week → secondary color, weekday name
 - Further → secondary color, "MMM d" formatted date
 
-**`PriorityBorder`** — a 5 pt wide colored rectangle on the left edge of the card:
-- `importance == nil` or 0 → no border (clear)
-- 1 → yellow
-- 2 → orange
-- 3+ → red
+**`PriorityBorder`** — a 5 pt wide colored rectangle on the left edge of the card. Takes `color: Color?`; nil = no border (zero width). Color is the task's first label color (`task.labels.first?.colorHex` parsed via `Color(hex:)`). No label = no border.
 
-**`MetadataRow`** — `HStack` with `LabelChips` and `TimeEstimateChip` separated by a "·" dot. Hidden if both are empty.
+**`MetadataRow`** — `HStack` with a `TaskLabelTag` and `TimeEstimateChip` separated by a "·" dot. Hidden if neither exists. Shows only the **first** label — one color per task row.
 
-**`LabelChips`** — shows up to 2 label chips, then `"+N more"` overflow text if more exist. Uses `LabelChip` for each.
+**`TaskLabelTag`** — label name text in a colored capsule background (0.15 opacity fill, full-color text). Color from `TaskLabel.colorHex` via `Color(hex:)`, falls back to `.blue`. Used directly in `MetadataRow` (single tag) and inside `LabelChips` (multi-tag, Calendar only).
 
-**`LabelChip`** — label name text in a colored capsule background. Color via `Color(hex:)` extension (defined in this file — see below).
+**`LabelChips`** — multi-chip container (up to `maxVisible` tags + `"+N more"` overflow). **Not used in task rows** — only by `EventCard` in the Calendar tab.
 
 **`TimeEstimateChip`** — timer SF symbol + formatted duration. Format: `"Xh Ym"` (omits minutes if zero, omits hours if zero).
 
@@ -69,13 +65,13 @@ Views/Tasks/TaskView.swift — TasksView
         │     ├── TaskCheckbox (toggles task.isCompleted)
         │     └── DueBadge
         ├── MetadataRow
-        │     ├── LabelChips → LabelChip (reads TaskLabel.colorHex)
+        │     └── TaskLabelTag (first label only, reads TaskLabel.colorHex)
         │     └── TimeEstimateChip
         └── SubtaskSection
               └── per subtask: title + checkbox
 
 Color(hex:) extension  ← defined here, used by:
-  - LabelChip (Tasks tab)
+  - TaskLabelTag (Tasks tab, via tagColor)
   - EventCard (Calendar tab)
   - LabelRow (Settings tab)
   - LabelPickerRow (editor popup)

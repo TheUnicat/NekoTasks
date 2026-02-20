@@ -5,7 +5,7 @@
 //  Created by TheUnicat on 1/24/26.
 //
 //  CLAUDE NOTES:
-//  Display card for events in CalendarView. Styled to match TaskCard (rounded rect, max 640pt, priority border).
+//  Display card for events in CalendarView. Styled to match TaskCard (rounded rect, max 640pt, label color border).
 //  Prominent time display in a highlighted block on the left, event title + location + recurring badge on the right.
 //  LabelChips included for future label integration. Tap triggers onTap callback (opens ShowTask editor).
 //
@@ -19,7 +19,7 @@ struct EventCard: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            PriorityBorder(importance: event.importance)
+            TaskRowLeftBorder(color: event.labels.first.flatMap { Color(hex: $0.colorHex ?? "") })
 
             HStack(spacing: 14) {
                 // Prominent time block
