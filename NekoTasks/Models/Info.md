@@ -2,7 +2,9 @@
 
 > ⚠️ **READ THIS BEFORE MAKING CHANGES** — This is the data layer. `TaskItem` is used everywhere in the app: all views query it, the editor modifies it, the AI tools create it, notifications reference it. Any change to `TaskItem`'s fields or relationships can break CalendarView, TasksView, ShowTask, AIService, NotificationManager, and the recurrence engine simultaneously.
 
-This folder contains the three core data types. There is no repository layer — views query SwiftData directly.
+This folder contains the three core data types and the schema migration infrastructure. There is no repository layer — views query SwiftData directly.
+
+See `Migrations/Info.md` for when to add a new schema version vs. when SwiftData handles changes automatically.
 
 ---
 
@@ -59,8 +61,9 @@ Simple `@Model` for labels/tags that can be attached to tasks and events.
 |---|---|---|
 | `name` | `String` | Display name |
 | `colorHex` | `String?` | Optional hex string like `"E53935"`; parsed via `Color(hex:)` extension (defined in `TaskRow.swift`). Falls back to `.blue` if nil or unparseable. |
+| `tasks` | `[TaskItem]` | Back-reference to all tasks/events this label is assigned to. Required for the many-to-many join table — **do not remove**. Without it SwiftData degrades to a one-to-many FK, breaking shared labels. |
 
-TaskLabel has a many-to-many relationship with TaskItem (SwiftData handles the join table automatically). Labels are managed in Settings and can be created inline in the task/event editor.
+TaskLabel has a many-to-many relationship with TaskItem backed by a join table (introduced in SchemaV2). Adding `tasks` was a breaking schema change; the V1→V2 migration in `Migrations/AppMigrationPlan.swift` handles existing stores.
 
 **Warning:** The `Color(hex:)` extension that parses `colorHex` is defined in `TaskRow.swift` (not here). If you move or rename that extension, all label color rendering will break.
 
@@ -114,7 +117,7 @@ TaskItem (typeRaw=1: event)
   └── (no subtasks in practice, though the relationship exists)
 
 TaskLabel
-  └── (no back-reference to TaskItem stored here; SwiftData manages the join)
+  └── tasks: [TaskItem]  ← back-reference required for many-to-many join table
 ```
 
 ---

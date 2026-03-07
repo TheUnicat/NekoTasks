@@ -14,6 +14,9 @@
 //
 //  ── USAGE ──
 //  • Stored in `TaskItem.labels` (many-to-many relationship managed by SwiftData).
+//  • `tasks: [TaskItem]` is the required inverse side of that relationship — it causes
+//    SwiftData to use a join table instead of a one-to-many FK. Do not remove it.
+//    Removing it is a breaking schema change and requires a new migration version.
 //  • Displayed as chips via `LabelChips` / `LabelChip` (TaskRow.swift).
 //  • The first label's colorHex drives the PriorityBorder left-edge color on TaskRow.
 //  • Managed in Settings → Labels section (SettingsView.swift → LabelEditorPopup.swift).
@@ -28,6 +31,7 @@ import SwiftUI
 final class TaskLabel: Identifiable {
     var name: String
     var colorHex: String?
+    var tasks: [TaskItem] = []
 
     init(name: String, colorHex: String? = nil) {
         self.name = name

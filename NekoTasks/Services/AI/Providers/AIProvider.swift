@@ -11,6 +11,7 @@
 
 import Foundation
 
+// protocol for AI provider (Apple Foundation Models, Claude, etc.)
 @MainActor
 protocol AIProvider {
     func send(message: String) async throws -> String

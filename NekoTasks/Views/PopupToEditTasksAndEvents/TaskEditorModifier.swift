@@ -5,10 +5,15 @@ struct TaskEditorModifier: ViewModifier {
     @Environment(\.modelContext) private var modelContext
     @Binding var editingTask: TaskItem?
     @Binding var isCreatingNew: Bool
+    @State private var pendingSave = false
 
     func body(content: Content) -> some View {
         content
             .sheet(item: $editingTask, onDismiss: {
+                if pendingSave {
+                    try? modelContext.save()
+                    pendingSave = false
+                }
                 isCreatingNew = false
             }) { task in
                 ShowTask(
@@ -28,6 +33,7 @@ struct TaskEditorModifier: ViewModifier {
                             task.title = trimmed
                             modelContext.insert(task)
                         }
+                        pendingSave = true
                         editingTask = nil
                         isCreatingNew = false
                     }
