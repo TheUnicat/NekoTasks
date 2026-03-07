@@ -20,6 +20,7 @@ final class TaskItem {
     var creationDate: Date
     var deadline: Date?
     var title: String
+    @Relationship(inverse: \TaskLabel.tasks)
     var labels: [TaskLabel]
     var importance: Int?
     var taskDescription: String?
