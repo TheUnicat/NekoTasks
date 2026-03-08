@@ -9,8 +9,9 @@
 //  Layout: title field at top, segmented Task/Event picker, grouped Form with context-dependent sections,
 //  Cancel/Delete/Save buttons at bottom. Uses local @State copies of all fields — only commits on Save.
 //  Includes LeftTextField (macOS NSViewRepresentable) for left-aligned text input without SwiftUI quirks.
-//  Event mode integrates RecurrenceRulePicker. Date/time input is text-based (MM/DD HH:MM format)
-//  with custom parseDateTime/parseTimeEstimate. onCancel/onSave callbacks for CalendarView's
+//  Event mode integrates RecurrenceRulePicker. Date/time input is text-based with NLP via
+//  NSDataDetector (e.g. "tomorrow", "Mar 15 2pm") with fallback to numeric MM/DD format.
+//  Uses parseDateTime/parseTimeEstimate. onCancel/onSave callbacks for CalendarView's
 //  create-then-insert pattern. Min size 350x450.
 //
 
@@ -205,7 +206,7 @@ struct ShowTask: View {
 
                 if selectedType == .task {
                     Section("Task") {
-                        inputField("Deadline", text: $deadlineText, placeholder: "MM/DD or YYYY/MM/DD")
+                        inputField("Deadline", text: $deadlineText, placeholder: "e.g. tomorrow, Mar 15, 3/7")
                         inputField("Estimate", text: $timeEstimateText, placeholder: "H:MM")
                     }
 
@@ -229,7 +230,7 @@ struct ShowTask: View {
                                         Text("Due")
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
-                                        TextField("MM/DD", text: $draft.deadlineText)
+                                        TextField("e.g. Mar 15", text: $draft.deadlineText)
                                             .font(.caption)
                                             .frame(maxWidth: 80)
                                     }
@@ -254,8 +255,8 @@ struct ShowTask: View {
                     }
                 } else {
                     Section("Event") {
-                        inputField("Start", text: $startTimeText, placeholder: "MM/DD HH:MM")
-                        inputField("End", text: $endTimeText, placeholder: "MM/DD HH:MM")
+                        inputField("Start", text: $startTimeText, placeholder: "e.g. tomorrow 2pm, Mar 15 10:00")
+                        inputField("End", text: $endTimeText, placeholder: "e.g. tomorrow 4pm, Mar 15 12:00")
                     }
 
                     RecurrenceRulePicker(rule: $rule, isRecurring: $isRecurring)
@@ -314,6 +315,12 @@ struct ShowTask: View {
         let trimmed = input.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return nil }
 
+        // Try NSDataDetector first for natural language dates
+        if let detected = Self.detectDate(from: trimmed) {
+            return detected
+        }
+
+        // Fallback: manual parsing for numeric formats like 3/7, 2026/3/7, 15 2:30
         let parts = trimmed.split(separator: " ", maxSplits: 1)
         let datePart = String(parts[0])
         let timePart = parts.count > 1 ? String(parts[1]) : nil
@@ -362,6 +369,16 @@ struct ShowTask: View {
         components.hour = hour
         components.minute = minute
         return calendar.date(from: components)
+    }
+
+    /// Uses NSDataDetector to extract a date from natural language input.
+    private static func detectDate(from text: String) -> Date? {
+        guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.date.rawValue) else {
+            return nil
+        }
+        let range = NSRange(text.startIndex..., in: text)
+        let matches = detector.matches(in: text, options: [], range: range)
+        return matches.first?.date
     }
 
     private func parseTimeEstimate(_ input: String) -> TimeInterval? {
