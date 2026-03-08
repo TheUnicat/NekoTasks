@@ -11,13 +11,13 @@ FoundationModels `Tool` implementations. Each tool reads `currentToolContext` (g
 ### `CreateTaskTool.swift`
 - Tool name: `create_task`
 - Creates `TaskItem(type: .task)`
-- Supports: title, description, deadline (ISO8601), timeEstimate (HH:MM), priority (1–3), labels (comma-separated), subtasks (JSON array string)
+- Supports: title, description, deadline (natural language via `parseNaturalDate`), timeEstimate (HH:MM), priority (1–3), labels (comma-separated), subtasks (JSON array string)
 - **⚠️ Inextricably linked to `TaskItem` fields** — if `TaskItem` gains/loses fields, update `Arguments` and `call()` here
 
 ### `CreateEventTool.swift`
 - Tool name: `create_event`
 - Creates `TaskItem(type: .event)`
-- Supports: title, startTime (ISO8601, defaults to 9 AM today), endTime (defaults to start+1h), location, description, labels
+- Supports: title, startTime (natural language, defaults to 9 AM today), endTime (defaults to start+1h), location, description, labels
 - **⚠️ Events must have `startTime` set** or they won't appear in `CalendarView`
 
 ### `CreateLabelTool.swift`
@@ -30,14 +30,22 @@ FoundationModels `Tool` implementations. Each tool reads `currentToolContext` (g
 - Shared by `CreateTaskTool` and `CreateEventTool`
 - Parses comma-separated label names, finds existing `TaskLabel` records (case-insensitive), creates new ones for unknown names, appends all to `item.labels`
 
+### `ParseDateTime.swift`
+- `func parseNaturalDate(_ text: String) -> Date?`
+- Shared NLP date parser used by `CreateTaskTool`, `CreateEventTool`, and `ShowTask`
+- Uses `NSDataDetector` to parse natural language dates (e.g. "tomorrow", "next Monday", "March 15 2pm")
+- Falls back to `ISO8601DateFormatter` for backwards compatibility
+
 ---
 
 ## Relationships
 
 ```
 CreateTaskTool, CreateEventTool
-  └── attachLabels()  ← LabelAttacher.swift
-        └── fetches/inserts TaskLabel via ModelContext
+  ├── attachLabels()      ← LabelAttacher.swift
+  │     └── fetches/inserts TaskLabel via ModelContext
+  └── parseNaturalDate()  ← ParseDateTime.swift
+        └── also used by ShowTask (Views/PopupToEditTasksAndEvents/)
 
 All tools
   └── read currentToolContext  ← ToolExecutionContext.swift

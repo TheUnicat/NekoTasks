@@ -25,10 +25,10 @@ final class CreateEventTool: Tool {
         @Guide(description: "The title of the event")
         var title: String
 
-        @Guide(description: "Start time in ISO8601 format (e.g., 2026-02-15T14:00:00Z)")
+        @Guide(description: "Start time in natural language (e.g., tomorrow 2pm, next Monday 10:00, March 15 9am)")
         var startTime: String?
 
-        @Guide(description: "End time in ISO8601 format")
+        @Guide(description: "End time in natural language (e.g., tomorrow 4pm, March 15 11am)")
         var endTime: String?
 
         @Guide(description: "Optional location name")
@@ -49,7 +49,7 @@ final class CreateEventTool: Tool {
         // Parse start time, default to 9 AM today if missing/invalid
         let cal = Calendar.current
         if let startStr = arguments.startTime,
-           let parsed = ISO8601DateFormatter().date(from: startStr) {
+           let parsed = parseNaturalDate(startStr) {
             event.startTime = parsed
         } else {
             event.startTime = cal.date(bySettingHour: 9, minute: 0, second: 0, of: Date())
@@ -57,7 +57,7 @@ final class CreateEventTool: Tool {
 
         // Parse end time, default to start + 1 hour
         if let endStr = arguments.endTime,
-           let parsed = ISO8601DateFormatter().date(from: endStr) {
+           let parsed = parseNaturalDate(endStr) {
             event.endTime = parsed
         } else if let start = event.startTime {
             event.endTime = start.addingTimeInterval(3600)

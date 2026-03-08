@@ -27,7 +27,7 @@ final class CreateTaskTool: Tool {
         @Guide(description: "Optional notes or description of the task")
         var taskDescription: String?
 
-        @Guide(description: "Optional deadline in ISO8601 format (e.g., 2026-02-15T14:00:00Z)")
+        @Guide(description: "Optional deadline in natural language (e.g., tomorrow, next Monday, March 15)")
         var deadline: String?
 
         @Guide(description: "Estimate of time needed to complete the task in HH:MM format")
@@ -39,7 +39,7 @@ final class CreateTaskTool: Tool {
         @Guide(description: "Comma-separated label names to categorize the task. Aim to add at least one label to each task/event. You can infer labels. Try to limit number of labels to 1-2.")
         var labels: String?
 
-        @Guide(description: "JSON array of subtask objects, ordered sequentially. Each object: {\"title\":\"...\", \"description\":\"...\", \"deadline\":\"ISO8601\", \"timeEstimate\":\"HH:MM\", \"priority\":\"1-3\"}. Only title is required.")
+        @Guide(description: "JSON array of subtask objects, ordered sequentially. Each object: {\"title\":\"...\", \"description\":\"...\", \"deadline\":\"next Friday\", \"timeEstimate\":\"HH:MM\", \"priority\":\"1-3\"}. Only title is required.")
         var subtasks: String?
     }
 
@@ -53,7 +53,7 @@ final class CreateTaskTool: Tool {
         }
 
         if let deadlineStr = arguments.deadline,
-           let deadline = ISO8601DateFormatter().date(from: deadlineStr) {
+           let deadline = parseNaturalDate(deadlineStr) {
             task.deadline = deadline
         }
 
@@ -82,7 +82,6 @@ final class CreateTaskTool: Tool {
             if let subtasksStr = arguments.subtasks,
                let data = subtasksStr.data(using: .utf8),
                let subtaskList = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
-                let isoFormatter = ISO8601DateFormatter()
                 for (index, dict) in subtaskList.enumerated() {
                     guard let title = dict["title"] as? String, !title.isEmpty else { continue }
                     let subtask = TaskItem(title: title, type: .task)
@@ -91,7 +90,7 @@ final class CreateTaskTool: Tool {
                         subtask.taskDescription = desc
                     }
                     if let deadlineStr = dict["deadline"] as? String,
-                       let deadline = isoFormatter.date(from: deadlineStr) {
+                       let deadline = parseNaturalDate(deadlineStr) {
                         subtask.deadline = deadline
                     }
                     if let estStr = dict["timeEstimate"] as? String {

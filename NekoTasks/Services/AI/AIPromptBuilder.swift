@@ -44,12 +44,12 @@ enum AIPromptBuilder {
         events, and create_label for tags/categories.
 
         For priorities: 1 = low, 2 = medium, 3 = high
-        For dates: use ISO8601 format (e.g., 2026-02-15T14:00:00Z)
-        For time estimates: use HH:MM format (e.g., 1:30 for 1 hour 30 minutes, 0:45 for 45 minutes)
+        For dates: use natural language (e.g., "tomorrow", "next Monday", "March 15", "Mar 20 2pm")
+        For time estimates: use HH:MM format (e.g., 1:30 for 1 hour 30 minutes)
         For labels: pass comma-separated names to categorize items
         For subtasks: pass a JSON array string of subtask objects, ordered by sequence. Each object \
-        can have: title (required), description, deadline (ISO8601), timeEstimate (HH:MM), priority (1-3). \
-        Example: [{"title":"Research","timeEstimate":"0:30"},{"title":"Write draft","deadline":"2026-02-20T00:00:00Z","priority":"2"}]. \
+        can have: title (required), description, deadline, timeEstimate (HH:MM), priority (1-3). \
+        Example: [{"title":"Research","timeEstimate":"0:30"},{"title":"Write draft","deadline":"next Friday","priority":"2"}]. \
         Only use subtasks for tasks, not events.
 
         DUPLICATE DETECTION: Before creating any task or event, compare the request against the \

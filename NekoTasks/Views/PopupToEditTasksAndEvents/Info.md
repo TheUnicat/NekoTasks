@@ -30,14 +30,14 @@ Changes are NOT written back to the `TaskItem` until `Save` is tapped (calls `co
 
 **Task mode sections (Form):**
 - Notes (description)
-- Deadline (text input: "MM/DD" or "YYYY/MM/DD")
+- Deadline (text input: natural language or "MM/DD" / "YYYY/MM/DD")
 - Time estimate (text input: "H:MM")
 - Subtasks (list of `SubtaskDraft`s; `"Add Subtask"` button appends drafts)
 - Priority (text: "1-5"), Location, Labels, Creation date (read-only)
 
 **Event mode sections (Form):**
 - Notes
-- Start/End time (text input: "MM/DD HH:MM")
+- Start/End time (text input: natural language or "MM/DD HH:MM")
 - `RecurrenceRulePicker` (from `RecurrenceRuleUI.swift` in `Views/Calendar/`)
 - Priority, Location, Labels, Creation date
 
@@ -50,7 +50,7 @@ Changes are NOT written back to the `TaskItem` until `Save` is tapped (calls `co
 **Delete button** — only shown when `task.modelContext != nil` (i.e., item is already persisted). New unsaved items don't show Delete.
 
 **Date/time parsing:**
-- `parseDateTime(_:)` — flexible: accepts "DD", "MM/DD", "YYYY/MM/DD", optionally followed by " HH:MM". Defaults year/month to current if not specified.
+- `parseDateTime(_:)` — first tries NLP via shared `parseNaturalDate()` (from `Services/AI/Tools/ParseDateTime.swift`) for natural language like "tomorrow", "March 15 2pm". Falls back to numeric parsing: accepts "DD", "MM/DD", "YYYY/MM/DD", optionally followed by " HH:MM". Defaults year/month to current if not specified.
 - `parseTimeEstimate(_:)` — accepts "H:MM" or "H" format, returns `TimeInterval` in seconds.
 - `formatDateTime(_:)` — formats `Date?` to "YYYY/M/D" or "YYYY/M/D H:MM" (omits time if midnight).
 

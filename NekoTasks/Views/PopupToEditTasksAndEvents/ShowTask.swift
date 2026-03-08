@@ -315,8 +315,8 @@ struct ShowTask: View {
         let trimmed = input.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return nil }
 
-        // Try NSDataDetector first for natural language dates
-        if let detected = Self.detectDate(from: trimmed) {
+        // Try NLP first for natural language dates (e.g. "tomorrow", "March 15 2pm")
+        if let detected = parseNaturalDate(trimmed) {
             return detected
         }
 
@@ -369,16 +369,6 @@ struct ShowTask: View {
         components.hour = hour
         components.minute = minute
         return calendar.date(from: components)
-    }
-
-    /// Uses NSDataDetector to extract a date from natural language input.
-    private static func detectDate(from text: String) -> Date? {
-        guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.date.rawValue) else {
-            return nil
-        }
-        let range = NSRange(text.startIndex..., in: text)
-        let matches = detector.matches(in: text, options: [], range: range)
-        return matches.first?.date
     }
 
     private func parseTimeEstimate(_ input: String) -> TimeInterval? {
